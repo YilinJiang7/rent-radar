@@ -13,7 +13,7 @@ You describe what you need in plain language, for example *"budget 2500, class a
 
 MIT 1.125 term project · Yilin Jiang (solo) · Midpoint check-in (Deliverable 2), Nov 19 2026.
 
-> **Status:** midpoint build. Proposal: `docs/proposal.pdf` (Deliverable 1, PSet6). What changed since the proposal and what's left: [`docs/midpoint.md`](docs/midpoint.md).
+> **Status:** midpoint build. Midpoint slides: <https://claude.ai/artifact/2HWv3wbV2vvjb1iWXt6VhC> (private until shared). Proposal: `docs/proposal.pdf` (Deliverable 1, PSet6). What changed since the proposal and what's left: [`docs/midpoint.md`](docs/midpoint.md).
 
 ---
 
