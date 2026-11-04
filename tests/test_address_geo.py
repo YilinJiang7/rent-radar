@@ -46,3 +46,9 @@ def test_grid_within_and_segment():
     seg = g.along_segment(42.0, -71.001, 42.009, -71.001, 100)
     assert len(seg) == 10  # every point is ~83 m from the line
     assert point_segment_distance_m(42.0, -71.0, 42.0, -71.001, 42.009, -71.001) < 100
+
+
+def test_trailing_unit_after_suffix_is_dropped():
+    assert address.parse("1218 Commonwealth Ave 1, 02134").street == "COMMONWEALTH AVE"
+    assert address.parse("100 Main St B", "02134").street == "MAIN ST"
+    assert address.parse("451 Park Dr", "02215").street == "PARK DR"

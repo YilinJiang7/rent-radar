@@ -6,6 +6,7 @@ verify them.
 """
 from __future__ import annotations
 
+import math
 import re
 from collections import Counter, defaultdict
 from datetime import date
@@ -76,9 +77,12 @@ class EvidenceIndex:
                 if r["record_id"] not in seen:
                     hits.append((r, "parcel"))
                     seen.add(r["record_id"])
+        # geo fallback only for records whose own address could not be parsed; a record with
+        # a different parseable address is a *neighbour* and must not be blamed on this building
         if not hits and self.rec_grid.n:
             for _d, r in self.rec_grid.within(listing["lat"], listing["lon"], config.GEO_MATCH_M):
-                hits.append((r, "geo"))
+                if not r.get("street_key"):
+                    hits.append((r, "geo"))
         return hits
 
     def parcels_for(self, listing: dict) -> List[dict]:
@@ -100,7 +104,8 @@ class EvidenceIndex:
         recs = [r for r, _m in matches if r["building_level"]]
         window = [r for r in recs if (r.get("year") or 0) > cutoff]
         by_signal = Counter(r["signal"] for r in window)
-        weighted = round(sum(signals.SEVERITY.get(r["signal"], 0.75) for r in window), 2)
+        # diminishing returns per signal: 158 trash tickets must not outweigh 3 rodent complaints
+        weighted = round(sum(signals.SEVERITY.get(s, 0.5) * (1 + math.log(n)) for s, n in by_signal.items()), 2)
         recent = sorted(recs, key=lambda r: r.get("date") or "", reverse=True)[:8]
         mtypes = Counter(m for _r, m in matches)
         return {

@@ -90,7 +90,8 @@ def fetch_rentsmart() -> None:
 
 
 def _fy(r) -> int:
-    text = f"{r.get('name') or ''} {r.get('url') or ''}".lower()
+    # only the file name: resource ids are hex and can contain "20xx" (b3862082 -> "2082")
+    text = f"{r.get('name') or ''} {(r.get('url') or '').rsplit('/', 1)[-1]}".lower()
     years = [int(y) for y in re.findall(r"20(\d{2})(?!\d)", text)] + [int(y) for y in re.findall(r"fy(\d{2})(?!\d)", text)]
     return max(years) if years else 0
 

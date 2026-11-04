@@ -29,6 +29,7 @@ SIGNALS: Dict[str, str] = {
     "living_conditions": "General unsanitary / poor living conditions",
     "permits_admin": "Permits, registrations, paperwork violations",
     "street_public": "Street-level public works (lights, potholes, sidewalks)",
+    "exterior_upkeep": "Weeds, parking / unregistered cars, missing house number, signs",
     "other": "Other / unclear",
 }
 
@@ -36,23 +37,26 @@ SIGNALS: Dict[str, str] = {
 SEVERITY = {
     "heat_hot_water": 3.0, "pests": 2.5, "water_mold": 2.5, "utilities": 3.0,
     "fire_life_safety": 3.0, "structural": 2.5, "living_conditions": 2.0,
-    "sanitation_trash": 1.0, "noise": 1.0, "permits_admin": 0.5,
-    "street_public": 0.25, "other": 0.75,
+    # trash-barrel tickets are by far the most common record (~60% of RentSmart),
+    # so they count, but little; exterior upkeep is shown but nearly free.
+    "sanitation_trash": 0.3, "noise": 1.0, "permits_admin": 0.3,
+    "street_public": 0.1, "exterior_upkeep": 0.1, "other": 0.5,
 }
 
 # Order matters: first match wins.
 RULES: List[Tuple[str, re.Pattern]] = [
+    ("exterior_upkeep", re.compile(r"weeds|overgrown|parking|unregistered motor|no number on|posting signs|auto repair|abandoned (bicycle|vehicle|bike)|transporting refuse", re.I)),
     ("heat_hot_water", re.compile(r"\bheat|\bhot water|boiler|furnace|no heat|radiator", re.I)),
     ("pests", re.compile(r"rodent|\brat\b|\brats\b|mice|mouse|roach|insect|bed ?bug|pest|vermin|infestation", re.I)),
-    ("utilities", re.compile(r"utilit|\bgas\b|electric(?!al hazard)|no water|water service|water shut", re.I)),
+    ("utilities", re.compile(r"utilit|\bgas\b|\belectricity\b|no (power|electric)|no water|water service|water shut", re.I)),
     ("water_mold", re.compile(r"leak|mold|mould|water damage|moisture|plumb|sewage|flood", re.I)),
     ("fire_life_safety", re.compile(r"smoke|carbon monoxide|\bco detector|egress|fire|sprinkler|electrical|wiring|unsafe|dangerous", re.I)),
     ("structural", re.compile(r"porch|stair|ceiling|wall|floor|roof|structur|collapse|window|door|railing|foundation", re.I)),
     ("sanitation_trash", re.compile(r"trash|dumpster|garbage|barrel|litter|dumping|recycl|bulk item|overflowing", re.I)),
-    ("noise", re.compile(r"noise|loud|party|nuisance", re.I)),
+    ("noise", re.compile(r"noise|loud|party|nuisance|beyond hours|after hours", re.I)),
     ("living_conditions", re.compile(r"unsanitary|living condition|poor condition|unsatisfactory|squalor|maintenance|hoarding|filth", re.I)),
-    ("permits_admin", re.compile(r"permit|registration|certificate|license|occupancy|failure to|work without|inspection report", re.I)),
-    ("street_public", re.compile(r"street ?light|pothole|sidewalk|traffic|signal|graffiti|tree|snow|catch basin|needle|abandoned (vehicle|bike)", re.I)),
+    ("permits_admin", re.compile(r"permit|registration|certificat|testing|license|occupancy|failure to|work without|inspection report|signage|contractor", re.I)),
+    ("street_public", re.compile(r"street ?light|pothole|sidewalk|traffic signal|graffiti|\btrees?\b|snow|catch basin|needle", re.I)),
 ]
 
 VIOLATION_TYPE_DEFAULT = {
@@ -77,7 +81,7 @@ def classify_rule(description: str, violation_type: str = "") -> str:
 def building_level(violation_type: str, signal: str) -> bool:
     """Is this record about the building itself (vs the street in front)?"""
     vt = (violation_type or "").lower()
-    if signal == "street_public":
+    if signal in ("street_public", "exterior_upkeep"):
         return False
     if "civic maintenance" in vt:
         return False

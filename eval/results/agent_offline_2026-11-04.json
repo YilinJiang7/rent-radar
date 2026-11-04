@@ -32,7 +32,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $2,500; weights changed: commute=5, street_safety=5, quiet=5. Listings on market over 180 days are hidden.\n\n16 listings match (104 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 81.0/100 (based on 76% of the weights)\n   - ~6 min by bike / ~17 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n2. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 75.1/100 (based on 76% of the weights)\n   - ~26 min by bike / ~81 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n3. **6 Agassiz St, Apt 3, Cambridge, MA 02140** [L:6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140] \u2014 $2,100/mo, 1 bd, score 71.6/100 (based on 76% of the weights)\n   - ~19 min by bike / ~60 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $2,500; weights changed: commute=5, street_safety=5, quiet=5. Listings on market over 180 days are hidden.\n\n16 listings match (104 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 81.9/100 (based on 80% of the weights)\n   - ~6 min by bike / ~17 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~5 min walk\n2. **6 Agassiz St, Apt 3, Cambridge, MA 02140** [L:6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140] \u2014 $2,100/mo, 1 bd, score 72.3/100 (based on 80% of the weights)\n   - ~19 min by bike / ~60 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Porter (Red Line), ~7 min walk\n3. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 71.4/100 (based on 80% of the weights)\n   - ~26 min by bike / ~81 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -58,21 +58,21 @@
      "args": {
       "listing_id": "4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139"
      },
-     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 81.0)"
-    },
-    {
-     "tool": "get_listing_evidence",
-     "args": {
-      "listing_id": "68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138"
-     },
-     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 75.1)"
+     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 81.9)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
       "listing_id": "6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140"
      },
-     "result": "6 Agassiz St, Apt 3, Cambridge, MA 02140 (score 71.6)"
+     "result": "6 Agassiz St, Apt 3, Cambridge, MA 02140 (score 72.3)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138"
+     },
+     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 71.4)"
     }
    ],
    "fallback_reason": null,
@@ -147,7 +147,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = Harvard Yard; studio; weights changed: building=5. Listings on market over 180 days are hidden.\n\n26 listings match (72 older listings hidden). Top picks:\n\n1. **80 Cambridgepark Dr, Apt 225, Cambridge, MA 02140** [L:80-Cambridgepark-Dr,-Apt-225,-Cambridge,-MA-02140] \u2014 $3,109/mo, studio, score 65.6/100 (based on 50% of the weights)\n   - ~15 min by bike / ~48 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 0 injury crashes, 0 pedestrian/bike crashes within 150 m\n2. **55 Wheeler St, Unit C511, Cambridge, MA 02138** [L:55-Wheeler-St,-Unit-C511,-Cambridge,-MA-02138] \u2014 $3,387/mo, studio, score 62.2/100 (based on 50% of the weights)\n   - ~15 min by bike / ~48 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 0 injury crashes, 0 pedestrian/bike crashes within 150 m (2022-2025)\n3. **15 Prentiss St, Unit 2R, Cambridge, MA 02140** [L:15-Prentiss-St,-Unit-2R,-Cambridge,-MA-02140] \u2014 $2,100/mo, studio, score 62.1/100 (based on 56% of the weights)\n   - ~6 min by bike / ~18 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 10 injury crashes, 7 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = Harvard Yard; studio; weights changed: building=5. Listings on market over 180 days are hidden.\n\n26 listings match (72 older listings hidden). Top picks:\n\n1. **80 Cambridgepark Dr, Apt 225, Cambridge, MA 02140** [L:80-Cambridgepark-Dr,-Apt-225,-Cambridge,-MA-02140] \u2014 $3,109/mo, studio, score 69.0/100 (based on 56% of the weights)\n   - ~15 min by bike / ~48 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 0 injury crashes, 0 pedestrian/bike crashes within 150 m\n   - T: Alewife (Red Line), ~5 min walk\n2. **130 Cambridgepark Dr, Unit 246, Cambridge, MA 02140** [L:130-Cambridgepark-Dr,-Unit-246,-Cambridge,-MA-02140] \u2014 $3,429/mo, studio, score 64.4/100 (based on 56% of the weights)\n   - ~16 min by bike / ~51 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 0 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Alewife (Red Line), ~7 min walk\n3. **15 Prentiss St, Unit 2R, Cambridge, MA 02140** [L:15-Prentiss-St,-Unit-2R,-Cambridge,-MA-02140] \u2014 $2,100/mo, studio, score 64.3/100 (based on 61% of the weights)\n   - ~6 min by bike / ~18 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 10 injury crashes, 7 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Porter (Red Line), ~7 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -174,21 +174,21 @@
      "args": {
       "listing_id": "80-Cambridgepark-Dr,-Apt-225,-Cambridge,-MA-02140"
      },
-     "result": "80 Cambridgepark Dr, Apt 225, Cambridge, MA 02140 (score 65.6)"
+     "result": "80 Cambridgepark Dr, Apt 225, Cambridge, MA 02140 (score 69.0)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
-      "listing_id": "55-Wheeler-St,-Unit-C511,-Cambridge,-MA-02138"
+      "listing_id": "130-Cambridgepark-Dr,-Unit-246,-Cambridge,-MA-02140"
      },
-     "result": "55 Wheeler St, Unit C511, Cambridge, MA 02138 (score 62.2)"
+     "result": "130 Cambridgepark Dr, Unit 246, Cambridge, MA 02140 (score 64.4)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
       "listing_id": "15-Prentiss-St,-Unit-2R,-Cambridge,-MA-02140"
      },
-     "result": "15 Prentiss St, Unit 2R, Cambridge, MA 02140 (score 62.1)"
+     "result": "15 Prentiss St, Unit 2R, Cambridge, MA 02140 (score 64.3)"
     }
    ],
    "fallback_reason": null,
@@ -213,7 +213,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); 1 bd; bike <= 15 min; weights changed: price=5, commute=5, building=5, street_safety=4. Listings on market over 180 days are hidden.\n\n44 listings match (55 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 75.7/100 (based on 67% of the weights)\n   - ~6 min by bike / ~17 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n2. **203 3rd St, Unit 2, Cambridge, MA 02141** [L:203-3rd-St,-Unit-2,-Cambridge,-MA-02141] \u2014 $2,950/mo, 1 bd, score 68.6/100 (based on 67% of the weights)\n   - ~7 min by bike / ~21 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n3. **100 Memorial Dr, Unit 1116C, Cambridge, MA 02142** [L:100-Memorial-Dr,-Unit-1116C,-Cambridge,-MA-02142] \u2014 $2,971/mo, 1 bd, score 66.0/100 (based on 67% of the weights)\n   - ~3 min by bike / ~9 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 3 injury crashes, 1 pedestrian/bike crashes within 150 m (2022-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); 1 bd; bike <= 15 min; weights changed: price=5, commute=5, building=5, street_safety=4. Listings on market over 180 days are hidden.\n\n44 listings match (55 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 77.1/100 (based on 71% of the weights)\n   - ~6 min by bike / ~17 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~5 min walk\n2. **203 3rd St, Unit 2, Cambridge, MA 02141** [L:203-3rd-St,-Unit-2,-Cambridge,-MA-02141] \u2014 $2,950/mo, 1 bd, score 68.5/100 (based on 71% of the weights)\n   - ~7 min by bike / ~21 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Lechmere (Green Line D), ~10 min walk\n3. **100 Memorial Dr, Unit 1116C, Cambridge, MA 02142** [L:100-Memorial-Dr,-Unit-1116C,-Cambridge,-MA-02142] \u2014 $2,971/mo, 1 bd, score 68.0/100 (based on 71% of the weights)\n   - ~3 min by bike / ~9 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 3 injury crashes, 1 pedestrian/bike crashes within 150 m (2022-2025)\n   - T: Kendall/MIT (Red Line), ~4 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -241,21 +241,21 @@
      "args": {
       "listing_id": "4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139"
      },
-     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 75.7)"
+     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 77.1)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
       "listing_id": "203-3rd-St,-Unit-2,-Cambridge,-MA-02141"
      },
-     "result": "203 3rd St, Unit 2, Cambridge, MA 02141 (score 68.6)"
+     "result": "203 3rd St, Unit 2, Cambridge, MA 02141 (score 68.5)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
       "listing_id": "100-Memorial-Dr,-Unit-1116C,-Cambridge,-MA-02142"
      },
-     "result": "100 Memorial Dr, Unit 1116C, Cambridge, MA 02142 (score 66.0)"
+     "result": "100 Memorial Dr, Unit 1116C, Cambridge, MA 02142 (score 68.0)"
     }
    ],
    "fallback_reason": null,
@@ -279,7 +279,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $3,000; areas 02141, 02142; weights changed: quiet=5. Listings on market over 180 days are hidden.\n\n13 listings match (13 older listings hidden). Top picks:\n\n1. **155 5th St, Apt 1, Cambridge, MA 02141** [L:155-5th-St,-Apt-1,-Cambridge,-MA-02141] \u2014 $2,900/mo, 3 bd, score 92.5/100 (based on 70% of the weights)\n   - ~6 min by bike / ~20 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n2. **151 N First St, Apt 609, Cambridge, MA 02141** [L:151-N-First-St,-Apt-609,-Cambridge,-MA-02141] \u2014 $2,791/mo, studio, score 59.4/100 (based on 45% of the weights)\n   - ~11 min by bike / ~33 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 4 injury crashes, 4 pedestrian/bike crashes within 150 m (2023-2025)\n3. **540 Cambridge St, Unit 3, Cambridge, MA 02141** [L:540-Cambridge-St,-Unit-3,-Cambridge,-MA-02141] \u2014 $2,600/mo, 2 bd, score 60.4/100 (based on 70% of the weights)\n   - ~8 min by bike / ~24 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 15 injury crashes, 11 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $3,000; areas 02141, 02142; weights changed: quiet=5. Listings on market over 180 days are hidden.\n\n13 listings match (13 older listings hidden). Top picks:\n\n1. **155 5th St, Apt 1, Cambridge, MA 02141** [L:155-5th-St,-Apt-1,-Cambridge,-MA-02141] \u2014 $2,900/mo, 3 bd, score 90.3/100 (based on 75% of the weights)\n   - ~6 min by bike / ~20 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Kendall/MIT (Red Line), ~11 min walk\n2. **151 N First St, Apt 609, Cambridge, MA 02141** [L:151-N-First-St,-Apt-609,-Cambridge,-MA-02141] \u2014 $2,791/mo, studio, score 63.5/100 (based on 50% of the weights)\n   - ~11 min by bike / ~33 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 4 injury crashes, 4 pedestrian/bike crashes within 150 m (2023-2025)\n   - T: Lechmere (Green Line D), ~2 min walk\n3. **2 Leighton St, Unit 2-669, Cambridge, MA 02141** [L:2-Leighton-St,-Unit-2-669,-Cambridge,-MA-02141] \u2014 $2,738/mo, studio, score 51.9/100 (based on 75% of the weights)\n   - ~10 min by bike / ~32 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 8 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Lechmere (Green Line D), ~4 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -309,21 +309,21 @@
      "args": {
       "listing_id": "155-5th-St,-Apt-1,-Cambridge,-MA-02141"
      },
-     "result": "155 5th St, Apt 1, Cambridge, MA 02141 (score 92.5)"
+     "result": "155 5th St, Apt 1, Cambridge, MA 02141 (score 90.3)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
       "listing_id": "151-N-First-St,-Apt-609,-Cambridge,-MA-02141"
      },
-     "result": "151 N First St, Apt 609, Cambridge, MA 02141 (score 59.4)"
+     "result": "151 N First St, Apt 609, Cambridge, MA 02141 (score 63.5)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
-      "listing_id": "540-Cambridge-St,-Unit-3,-Cambridge,-MA-02141"
+      "listing_id": "2-Leighton-St,-Unit-2-669,-Cambridge,-MA-02141"
      },
-     "result": "540 Cambridge St, Unit 3, Cambridge, MA 02141 (score 60.4)"
+     "result": "2 Leighton St, Unit 2-669, Cambridge, MA 02141 (score 51.9)"
     }
    ],
    "fallback_reason": null,
@@ -349,7 +349,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $4,500; 3 bd; weights changed: transit=4. Listings on market over 180 days are hidden.\n\n24 listings match (39 older listings hidden). Top picks:\n\n1. **155 5th St, Apt 1, Cambridge, MA 02141** [L:155-5th-St,-Apt-1,-Cambridge,-MA-02141] \u2014 $2,900/mo, 3 bd, score 93.7/100 (based on 53% of the weights)\n   - ~6 min by bike / ~20 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n2. **260 Brookline St, Apt 1, Cambridge, MA 02139** [L:260-Brookline-St,-Apt-1,-Cambridge,-MA-02139] \u2014 $3,300/mo, 3 bd, score 83.1/100 (based on 53% of the weights)\n   - ~6 min by bike / ~20 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 6 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n3. **25 Granite St, Unit 2, Cambridge, MA 02139** [L:25-Granite-St,-Unit-2,-Cambridge,-MA-02139] \u2014 $4,000/mo, 3 bd, score 83.5/100 (based on 53% of the weights)\n   - ~8 min by bike / ~26 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 6 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $4,500; 3 bd; weights changed: transit=4. Listings on market over 180 days are hidden.\n\n24 listings match (39 older listings hidden). Top picks:\n\n1. **155 5th St, Apt 1, Cambridge, MA 02141** [L:155-5th-St,-Apt-1,-Cambridge,-MA-02141] \u2014 $2,900/mo, 3 bd, score 84.1/100 (based on 74% of the weights)\n   - ~6 min by bike / ~20 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Kendall/MIT (Red Line), ~11 min walk\n2. **86 Norfolk St, Apt 2, Cambridge, MA 02139** [L:86-Norfolk-St,-Apt-2,-Cambridge,-MA-02139] \u2014 $4,500/mo, 3 bd, score 87.4/100 (based on 74% of the weights)\n   - ~5 min by bike / ~16 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 3 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~5 min walk\n3. **39 Regent St, Unit 3, Cambridge, MA 02140** [L:39-Regent-St,-Unit-3,-Cambridge,-MA-02140] \u2014 $3,400/mo, 3 bd, score 79.5/100 (based on 74% of the weights)\n   - ~22 min by bike / ~68 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 7 injury crashes, 5 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Porter (Red Line), ~5 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -377,21 +377,21 @@
      "args": {
       "listing_id": "155-5th-St,-Apt-1,-Cambridge,-MA-02141"
      },
-     "result": "155 5th St, Apt 1, Cambridge, MA 02141 (score 93.7)"
+     "result": "155 5th St, Apt 1, Cambridge, MA 02141 (score 84.1)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
-      "listing_id": "260-Brookline-St,-Apt-1,-Cambridge,-MA-02139"
+      "listing_id": "86-Norfolk-St,-Apt-2,-Cambridge,-MA-02139"
      },
-     "result": "260 Brookline St, Apt 1, Cambridge, MA 02139 (score 83.1)"
+     "result": "86 Norfolk St, Apt 2, Cambridge, MA 02139 (score 87.4)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
-      "listing_id": "25-Granite-St,-Unit-2,-Cambridge,-MA-02139"
+      "listing_id": "39-Regent-St,-Unit-3,-Cambridge,-MA-02140"
      },
-     "result": "25 Granite St, Unit 2, Cambridge, MA 02139 (score 83.5)"
+     "result": "39 Regent St, Unit 3, Cambridge, MA 02140 (score 79.5)"
     }
    ],
    "fallback_reason": null,
@@ -512,7 +512,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = Harvard SEAS (150 Western Ave, Allston); rent <= $2,800; weights changed: commute=5, building=4, street_safety=5. Listings on market over 180 days are hidden.\n\n33 listings match (162 older listings hidden). Top picks:\n\n1. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 83.1/100 (based on 68% of the weights)\n   - ~12 min by bike / ~39 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n2. **109 Cushing St, Apt 1, Cambridge, MA 02138** [L:109-Cushing-St,-Apt-1,-Cambridge,-MA-02138] \u2014 $2,450/mo, 2 bd, score 90.7/100 (based on 68% of the weights)\n   - ~14 min by bike / ~44 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 0 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n3. **237 Garden St, Unit 243-8, Cambridge, MA 02138** [L:237-Garden-St,-Unit-243-8,-Cambridge,-MA-02138] \u2014 $1,929/mo, 1 bd, score 82.3/100 (based on 68% of the weights)\n   - ~14 min by bike / ~44 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = Harvard SEAS (150 Western Ave, Allston); rent <= $2,800; weights changed: commute=5, building=4, street_safety=5. Listings on market over 180 days are hidden.\n\n33 listings match (162 older listings hidden). Top picks:\n\n1. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 77.9/100 (based on 73% of the weights)\n   - ~12 min by bike / ~39 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n2. **237 Garden St, Unit 243-8, Cambridge, MA 02138** [L:237-Garden-St,-Unit-243-8,-Cambridge,-MA-02138] \u2014 $1,929/mo, 1 bd, score 78.0/100 (based on 73% of the weights)\n   - ~14 min by bike / ~44 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Alewife (Red Line), ~18 min walk\n3. **237 Garden St, Unit 237-2, Cambridge, MA 02138** [L:237-Garden-St,-Unit-237-2,-Cambridge,-MA-02138] \u2014 $2,000/mo, 1 bd, score 77.4/100 (based on 73% of the weights)\n   - ~14 min by bike / ~44 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Alewife (Red Line), ~18 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -538,21 +538,21 @@
      "args": {
       "listing_id": "68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138"
      },
-     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 83.1)"
-    },
-    {
-     "tool": "get_listing_evidence",
-     "args": {
-      "listing_id": "109-Cushing-St,-Apt-1,-Cambridge,-MA-02138"
-     },
-     "result": "109 Cushing St, Apt 1, Cambridge, MA 02138 (score 90.7)"
+     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 77.9)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
       "listing_id": "237-Garden-St,-Unit-243-8,-Cambridge,-MA-02138"
      },
-     "result": "237 Garden St, Unit 243-8, Cambridge, MA 02138 (score 82.3)"
+     "result": "237 Garden St, Unit 243-8, Cambridge, MA 02138 (score 78.0)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "237-Garden-St,-Unit-237-2,-Cambridge,-MA-02138"
+     },
+     "result": "237 Garden St, Unit 237-2, Cambridge, MA 02138 (score 77.4)"
     }
    ],
    "fallback_reason": null,
@@ -624,7 +624,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = Harvard Yard; rent <= $2,600. Listings on market over 180 days are hidden.\n\n21 listings match (120 older listings hidden). Top picks:\n\n1. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 78.4/100 (based on 62% of the weights)\n   - ~14 min by bike / ~42 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n2. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 76.5/100 (based on 62% of the weights)\n   - ~8 min by bike / ~25 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n3. **237 Garden St, Unit 243-8, Cambridge, MA 02138** [L:237-Garden-St,-Unit-243-8,-Cambridge,-MA-02138] \u2014 $1,929/mo, 1 bd, score 79.6/100 (based on 62% of the weights)\n   - ~11 min by bike / ~33 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = Harvard Yard; rent <= $2,600. Listings on market over 180 days are hidden.\n\n21 listings match (120 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 78.6/100 (based on 69% of the weights)\n   - ~8 min by bike / ~25 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~5 min walk\n2. **6 Agassiz St, Apt 3, Cambridge, MA 02140** [L:6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140] \u2014 $2,100/mo, 1 bd, score 76.1/100 (based on 69% of the weights)\n   - ~6 min by bike / ~20 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Porter (Red Line), ~7 min walk\n3. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 71.2/100 (based on 69% of the weights)\n   - ~14 min by bike / ~42 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -648,23 +648,23 @@
     {
      "tool": "get_listing_evidence",
      "args": {
-      "listing_id": "68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138"
-     },
-     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 78.4)"
-    },
-    {
-     "tool": "get_listing_evidence",
-     "args": {
       "listing_id": "4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139"
      },
-     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 76.5)"
+     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 78.6)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
-      "listing_id": "237-Garden-St,-Unit-243-8,-Cambridge,-MA-02138"
+      "listing_id": "6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140"
      },
-     "result": "237 Garden St, Unit 243-8, Cambridge, MA 02138 (score 79.6)"
+     "result": "6 Agassiz St, Apt 3, Cambridge, MA 02140 (score 76.1)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138"
+     },
+     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 71.2)"
     }
    ],
    "fallback_reason": null,
@@ -689,7 +689,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $3,000; 1 bd; areas 02139; weights changed: building=5. Listings on market over 180 days are hidden.\n\n4 listings match (8 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 76.5/100 (based on 56% of the weights)\n   - ~6 min by bike / ~17 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n2. **329 Harvard St, Apt 30, Cambridge, MA 02139** [L:329-Harvard-St,-Apt-30,-Cambridge,-MA-02139] \u2014 $2,700/mo, 1 bd, score 59.5/100 (based on 56% of the weights)\n   - ~9 min by bike / ~29 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 12 injury crashes, 5 pedestrian/bike crashes within 150 m (2021-2025)\n3. **199 Prospect St, Unit 1A, Cambridge, MA 02139** [L:199-Prospect-St,-Unit-1A,-Cambridge,-MA-02139] \u2014 $2,000/mo, 1 bd, score 62.2/100 (based on 56% of the weights)\n   - ~7 min by bike / ~22 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 15 injury crashes, 10 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $3,000; 1 bd; areas 02139; weights changed: building=5. Listings on market over 180 days are hidden.\n\n4 listings match (8 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 78.6/100 (based on 61% of the weights)\n   - ~6 min by bike / ~17 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~5 min walk\n2. **199 Prospect St, Unit 1A, Cambridge, MA 02139** [L:199-Prospect-St,-Unit-1A,-Cambridge,-MA-02139] \u2014 $2,000/mo, 1 bd, score 62.6/100 (based on 61% of the weights)\n   - ~7 min by bike / ~22 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 15 injury crashes, 10 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~10 min walk\n3. **329 Harvard St, Apt 30, Cambridge, MA 02139** [L:329-Harvard-St,-Apt-30,-Cambridge,-MA-02139] \u2014 $2,700/mo, 1 bd, score 59.6/100 (based on 61% of the weights)\n   - ~9 min by bike / ~29 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 12 injury crashes, 5 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~11 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -720,21 +720,21 @@
      "args": {
       "listing_id": "4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139"
      },
-     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 76.5)"
-    },
-    {
-     "tool": "get_listing_evidence",
-     "args": {
-      "listing_id": "329-Harvard-St,-Apt-30,-Cambridge,-MA-02139"
-     },
-     "result": "329 Harvard St, Apt 30, Cambridge, MA 02139 (score 59.5)"
+     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 78.6)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
       "listing_id": "199-Prospect-St,-Unit-1A,-Cambridge,-MA-02139"
      },
-     "result": "199 Prospect St, Unit 1A, Cambridge, MA 02139 (score 62.2)"
+     "result": "199 Prospect St, Unit 1A, Cambridge, MA 02139 (score 62.6)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "329-Harvard-St,-Apt-30,-Cambridge,-MA-02139"
+     },
+     "result": "329 Harvard St, Apt 30, Cambridge, MA 02139 (score 59.6)"
     }
    ],
    "fallback_reason": null,
@@ -759,7 +759,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $3,000; 2 bd; areas 02135\n\n9 listings match. Top picks:\n\n1. **6 Camelot Ct, Apt 18, Boston, MA 02135** [L:6-Camelot-Ct,-Apt-18,-Boston,-MA-02135] \u2014 $2,495/mo, 2 bd, score 70.9/100 (based on 62% of the weights)\n   - ~22 min by bike / ~67 min walk to campus (estimate)\n   - building record: no data (RentSmart not loaded)\n   - street: 4 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n2. **94 Corey Rd, Apt 33, Boston, MA 02135** [L:94-Corey-Rd,-Apt-33,-Boston,-MA-02135] \u2014 $2,725/mo, 2 bd, score 72.8/100 (based on 62% of the weights)\n   - ~23 min by bike / ~73 min walk to campus (estimate)\n   - building record: no data (RentSmart not loaded)\n   - street: 1 injury crashes, 1 pedestrian/bike crashes within 150 m (2022-2024)\n3. **69 Chiswick Rd, Apt 1, Boston, MA 02135** [L:69-Chiswick-Rd,-Apt-1,-Boston,-MA-02135] \u2014 $2,740/mo, 2 bd, score 66.8/100 (based on 62% of the weights)\n   - ~27 min by bike / ~84 min walk to campus (estimate)\n   - building record: no data (RentSmart not loaded)\n   - street: 4 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $3,000; 2 bd; areas 02135\n\n9 listings match. Top picks:\n\n1. **6 Camelot Ct, Apt 18, Boston, MA 02135** [L:6-Camelot-Ct,-Apt-18,-Boston,-MA-02135] \u2014 $2,495/mo, 2 bd, score 77.5/100 (based on 100% of the weights)\n   - ~22 min by bike / ~67 min walk to campus (estimate)\n   - building: 0 city complaints/violations matched in last 3 yrs\n   - street: 4 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n   - owner of record: CAMELOT REALTY TRUST (occupancy unknown; 1 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Warren Street (Green Line B), ~3 min walk\n2. **1662 Commonwealth Ave, Apt 11, Boston, MA 02135** [L:1662-Commonwealth-Ave,-Apt-11,-Boston,-MA-02135] \u2014 $2,800/mo, 2 bd, score 71.6/100 (based on 88% of the weights)\n   - ~24 min by bike / ~76 min walk to campus (estimate)\n   - building: 0 city complaints/violations matched in last 3 yrs\n   - street: 5 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Sutherland Road (Green Line B), ~2 min walk\n3. **94 Corey Rd, Apt 33, Boston, MA 02135** [L:94-Corey-Rd,-Apt-33,-Boston,-MA-02135] \u2014 $2,725/mo, 2 bd, score 68.9/100 (based on 100% of the weights)\n   - ~23 min by bike / ~73 min walk to campus (estimate)\n   - building: 31 city records in last 3 yrs (sanitation trash x27, permits admin x3, pests x1) [R:15049]\n   - street: 1 injury crashes, 1 pedestrian/bike crashes within 150 m (2022-2024)\n   - owner of record: COREY ROAD LLC (occupancy unknown; 1 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Washington Street (Green Line B), ~5 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -790,21 +790,21 @@
      "args": {
       "listing_id": "6-Camelot-Ct,-Apt-18,-Boston,-MA-02135"
      },
-     "result": "6 Camelot Ct, Apt 18, Boston, MA 02135 (score 70.9)"
+     "result": "6 Camelot Ct, Apt 18, Boston, MA 02135 (score 77.5)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "1662-Commonwealth-Ave,-Apt-11,-Boston,-MA-02135"
+     },
+     "result": "1662 Commonwealth Ave, Apt 11, Boston, MA 02135 (score 71.6)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
       "listing_id": "94-Corey-Rd,-Apt-33,-Boston,-MA-02135"
      },
-     "result": "94 Corey Rd, Apt 33, Boston, MA 02135 (score 72.8)"
-    },
-    {
-     "tool": "get_listing_evidence",
-     "args": {
-      "listing_id": "69-Chiswick-Rd,-Apt-1,-Boston,-MA-02135"
-     },
-     "result": "69 Chiswick Rd, Apt 1, Boston, MA 02135 (score 66.8)"
+     "result": "94 Corey Rd, Apt 33, Boston, MA 02135 (score 68.9)"
     }
    ],
    "fallback_reason": null,
@@ -856,7 +856,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = Harvard Yard; rent <= $2,700; 1 bd; weights changed: commute=4. Listings on market over 180 days are hidden.\n\n18 listings match (73 older listings hidden). Top picks:\n\n1. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 79.3/100 (based on 65% of the weights)\n   - ~14 min by bike / ~42 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n2. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 78.6/100 (based on 65% of the weights)\n   - ~8 min by bike / ~25 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n3. **237 Garden St, Unit 243-8, Cambridge, MA 02138** [L:237-Garden-St,-Unit-243-8,-Cambridge,-MA-02138] \u2014 $1,929/mo, 1 bd, score 81.2/100 (based on 65% of the weights)\n   - ~11 min by bike / ~33 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = Harvard Yard; rent <= $2,700; 1 bd; weights changed: commute=4. Listings on market over 180 days are hidden.\n\n18 listings match (73 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 80.4/100 (based on 71% of the weights)\n   - ~8 min by bike / ~25 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~5 min walk\n2. **6 Agassiz St, Apt 3, Cambridge, MA 02140** [L:6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140] \u2014 $2,100/mo, 1 bd, score 78.1/100 (based on 71% of the weights)\n   - ~6 min by bike / ~20 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Porter (Red Line), ~7 min walk\n3. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 72.7/100 (based on 71% of the weights)\n   - ~14 min by bike / ~42 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -882,23 +882,23 @@
     {
      "tool": "get_listing_evidence",
      "args": {
-      "listing_id": "68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138"
-     },
-     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 79.3)"
-    },
-    {
-     "tool": "get_listing_evidence",
-     "args": {
       "listing_id": "4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139"
      },
-     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 78.6)"
+     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 80.4)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
-      "listing_id": "237-Garden-St,-Unit-243-8,-Cambridge,-MA-02138"
+      "listing_id": "6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140"
      },
-     "result": "237 Garden St, Unit 243-8, Cambridge, MA 02138 (score 81.2)"
+     "result": "6 Agassiz St, Apt 3, Cambridge, MA 02140 (score 78.1)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138"
+     },
+     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 72.7)"
     }
    ],
    "fallback_reason": null,
@@ -923,7 +923,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $1,500. Listings on market over 180 days are hidden.\n\n1 listings match (1 older listings hidden). Top picks:\n\n1. **28 Langdon St, # 30, Cambridge, MA 02138** [L:28-Langdon-St,---30,-Cambridge,-MA-02138] \u2014 $850/mo, 1 bd, score 69.6/100 (based on 62% of the weights)\n   - ~17 min by bike / ~53 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 14 injury crashes, 6 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $1,500. Listings on market over 180 days are hidden.\n\n1 listings match (1 older listings hidden). Top picks:\n\n1. **28 Langdon St, # 30, Cambridge, MA 02138** [L:28-Langdon-St,---30,-Cambridge,-MA-02138] \u2014 $850/mo, 1 bd, score 67.5/100 (based on 69% of the weights)\n   - ~17 min by bike / ~53 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 14 injury crashes, 6 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Harvard (Red Line), ~13 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -949,7 +949,7 @@
      "args": {
       "listing_id": "28-Langdon-St,---30,-Cambridge,-MA-02138"
      },
-     "result": "28 Langdon St, # 30, Cambridge, MA 02138 (score 69.6)"
+     "result": "28 Langdon St, # 30, Cambridge, MA 02138 (score 67.5)"
     }
    ],
    "fallback_reason": null,
@@ -1024,7 +1024,7 @@
     "safety_note_ok": true,
     "pass": true
    },
-   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $2,600; 1 bd; weights changed: building=4, street_safety=4. Listings on market over 180 days are hidden.\n\n15 listings match (66 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 75.7/100 (based on 63% of the weights)\n   - ~6 min by bike / ~17 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n2. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 72.4/100 (based on 63% of the weights)\n   - ~26 min by bike / ~81 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n3. **6 Agassiz St, Apt 3, Cambridge, MA 02140** [L:6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140] \u2014 $2,100/mo, 1 bd, score 66.1/100 (based on 63% of the weights)\n   - ~19 min by bike / ~60 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._\n\n_Note: \"safe\" here means street-crash history and building safety records only. Rent Radar does not use crime data or any information about residents._",
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $2,600; 1 bd; weights changed: building=4, street_safety=4. Listings on market over 180 days are hidden.\n\n15 listings match (66 older listings hidden). Top picks:\n\n1. **4 Percy Pl, Unit 2, Cambridge, MA 02139** [L:4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139] \u2014 $2,175/mo, 1 bd, score 77.6/100 (based on 68% of the weights)\n   - ~6 min by bike / ~17 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~5 min walk\n2. **6 Agassiz St, Apt 3, Cambridge, MA 02140** [L:6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140] \u2014 $2,100/mo, 1 bd, score 67.7/100 (based on 68% of the weights)\n   - ~19 min by bike / ~60 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 2 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Porter (Red Line), ~7 min walk\n3. **68 Homer Ave, Unit 207, Cambridge, MA 02138** [L:68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138] \u2014 $2,246/mo, 1 bd, score 66.8/100 (based on 68% of the weights)\n   - ~26 min by bike / ~81 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - street: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._\n\n_Note: \"safe\" here means street-crash history and building safety records only. Rent Radar does not use crime data or any information about residents._",
    "tool_trace": [
     {
      "tool": "rank_listings",
@@ -1052,21 +1052,21 @@
      "args": {
       "listing_id": "4-Percy-Pl,-Unit-2,-Cambridge,-MA-02139"
      },
-     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 75.7)"
-    },
-    {
-     "tool": "get_listing_evidence",
-     "args": {
-      "listing_id": "68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138"
-     },
-     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 72.4)"
+     "result": "4 Percy Pl, Unit 2, Cambridge, MA 02139 (score 77.6)"
     },
     {
      "tool": "get_listing_evidence",
      "args": {
       "listing_id": "6-Agassiz-St,-Apt-3,-Cambridge,-MA-02140"
      },
-     "result": "6 Agassiz St, Apt 3, Cambridge, MA 02140 (score 66.1)"
+     "result": "6 Agassiz St, Apt 3, Cambridge, MA 02140 (score 67.7)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "68-Homer-Ave,-Unit-207,-Cambridge,-MA-02138"
+     },
+     "result": "68 Homer Ave, Unit 207, Cambridge, MA 02138 (score 66.8)"
     }
    ],
    "fallback_reason": null,
@@ -1088,7 +1088,7 @@
     "constraints_ok": true,
     "pass": true
    },
-   "answer": "**How the score works:** a weighted average of 0-100 factor scores. Factors with no data are left out, not guessed.\n\n- **Price** (default weight 3): With a budget: 100 at <=85% of budget, 50 at budget, 0 at 115%. Without: rank of rent per bedroom (cheaper = higher).\n- **Bike commute** (default weight 3): Estimated bike minutes to your campus: 100 at <=10 min, 0 at >=45 min (straight line x 1.3 at 15 km/h).\n- **T access** (default weight 1): Walk minutes to the nearest subway / Green Line station: 100 at <=5 min, 0 at >=20 min.\n- **Building record** (default weight 3): City complaints + violations at this address in the last 3 years, weighted by severity (heat, pests, mold, safety count most): 100 x exp(-weighted/6).\n- **Owner record** (default weight 2): Start 70; +20 if owner-occupied; -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA.\n- **Street safety** (default weight 2): Rank of (injury crashes + 2 x pedestrian/bike crashes) within 150 m, 2021-2025, plus dark-hour bike crashes along the line to campus (fewer = higher).\n- **Traffic noise** (default weight 1): Rank of the busiest road (AADT, vehicles/day) within 100 m among listings with a traffic count (quieter = higher). No count nearby = no data.\n- **Listing freshness** (default weight 1): Days on market: 100 at <=14 days, 0 at >=365 days. Very old listings are often stale or already rented.",
+   "answer": "**How the score works:** a weighted average of 0-100 factor scores. Factors with no data are left out, not guessed.\n\n- **Price** (default weight 3): With a budget: 100 at <=85% of budget, 50 at budget, 0 at 115%. Without: rank of rent per bedroom (cheaper = higher).\n- **Bike commute** (default weight 3): Estimated bike minutes to your campus: 100 at <=10 min, 0 at >=45 min (straight line x 1.3 at 15 km/h).\n- **T access** (default weight 1): Walk minutes to the nearest subway / Green Line station: 100 at <=5 min, 0 at >=20 min.\n- **Building record** (default weight 3): City complaints + violations at this address in the last 3 years. Each signal type counts severity x (1 + ln count), so repeats add less (heat, pests, mold, safety weigh most; trash tickets 0.3). Score = 100 x exp(-total/6).\n- **Owner record** (default weight 2): Start 70; +20 if owner-occupied; -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA.\n- **Street safety** (default weight 2): Rank of (injury crashes + 2 x pedestrian/bike crashes) within 150 m, 2021-2025, plus dark-hour bike crashes along the line to campus (fewer = higher).\n- **Traffic noise** (default weight 1): Rank of the busiest road (AADT, vehicles/day) within 100 m among listings with a traffic count (quieter = higher). No count nearby = no data.\n- **Listing freshness** (default weight 1): Days on market: 100 at <=14 days, 0 at >=365 days. Very old listings are often stale or already rented.",
    "tool_trace": [
     {
      "tool": "explain_factors",

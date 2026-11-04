@@ -22,7 +22,7 @@ def test_bad_building_scores_lower(store):
     s2 = store.scorer.score(store.listings["FX-2"], store.features["FX-2"], "mit")  # one trash record
     s4 = store.scorer.score(store.listings["FX-4"], store.features["FX-4"], "mit")  # one noise record
     b = lambda s: next(x for x in s["breakdown"] if x["factor"] == "building")["score"]  # noqa: E731
-    assert b(s1) < b(s2) < 100.0 and b(s4) == b(s2)
+    assert b(s1) < b(s4) < b(s2) < 100.0  # heat+pests+smoke < one noise < one trash ticket
 
 
 def test_weights_change_ranking(store):

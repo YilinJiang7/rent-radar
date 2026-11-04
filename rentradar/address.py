@@ -80,6 +80,10 @@ def norm_street(name: str) -> str:
             out.append(SUFFIX[w])
         else:
             out.append(w)
+    suffixes = set(SUFFIX.values()) | {"ST", "AVE", "RD", "WAY", "ROW", "PARK", "HWY", "SQ"}
+    last = max((i for i, w in enumerate(out) if w in suffixes and i > 0), default=None)
+    if last is not None and last < len(out) - 1 and all(re.search(r"\d", w) or len(w) == 1 for w in out[last + 1:]):
+        out = out[: last + 1]  # trailing unit like "1", "2R", "B"
     return " ".join(out)
 
 

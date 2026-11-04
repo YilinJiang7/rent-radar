@@ -84,7 +84,7 @@ The score is a weighted average of 0–100 factor scores. Weights run from 0 to 
 |---|---|---|
 | Price | 3 | Against a budget: 100 at ≤85% of budget, 50 at budget, 0 at 115%. With no budget: rank of rent per bedroom. |
 | Bike commute | 3 | 100 at ≤10 min, 0 at ≥45 min |
-| Building record | 3 | 100·exp(−severity-weighted records in the last 3 years / 6) |
+| Building record | 3 | Per signal type: severity × (1 + ln count), so repeats add less. Trash tickets weigh 0.3; heat, pests, mold and safety weigh 2.5–3. Score = 100·exp(−total / 6), using the last 3 years. |
 | Owner record | 2 | Starts at 70. +20 if owner-occupied, −5 per serious record across the owner's properties (max −60), −10 if mailing address is outside MA. |
 | Street safety | 2 | Rank of (injury + 2 × pedestrian/bike crashes within 150 m + after-dark bike crashes along the route) |
 | Traffic noise | 1 | Rank of the busiest nearby road's AADT. No traffic count within 100 m counts as no data. |

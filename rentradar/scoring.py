@@ -18,7 +18,7 @@ FACTORS: Dict[str, Dict[str, str]] = {
     "price": {"label": "Price", "how": "With a budget: 100 at <=85% of budget, 50 at budget, 0 at 115%. Without: rank of rent per bedroom (cheaper = higher)."},
     "commute": {"label": "Bike commute", "how": "Estimated bike minutes to your campus: 100 at <=10 min, 0 at >=45 min (straight line x 1.3 at 15 km/h)."},
     "transit": {"label": "T access", "how": "Walk minutes to the nearest subway / Green Line station: 100 at <=5 min, 0 at >=20 min."},
-    "building": {"label": "Building record", "how": "City complaints + violations at this address in the last 3 years, weighted by severity (heat, pests, mold, safety count most): 100 x exp(-weighted/6)."},
+    "building": {"label": "Building record", "how": "City complaints + violations at this address in the last 3 years. Each signal type counts severity x (1 + ln count), so repeats add less (heat, pests, mold, safety weigh most; trash tickets 0.3). Score = 100 x exp(-total/6)."},
     "landlord": {"label": "Owner record", "how": "Start 70; +20 if owner-occupied; -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA."},
     "street_safety": {"label": "Street safety", "how": "Rank of (injury crashes + 2 x pedestrian/bike crashes) within 150 m, 2021-2025, plus dark-hour bike crashes along the line to campus (fewer = higher)."},
     "quiet": {"label": "Traffic noise", "how": "Rank of the busiest road (AADT, vehicles/day) within 100 m among listings with a traffic count (quieter = higher). No count nearby = no data."},
