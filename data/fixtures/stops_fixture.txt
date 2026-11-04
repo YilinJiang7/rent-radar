@@ -1,0 +1,11 @@
+stop_id,stop_name,stop_desc,stop_lat,stop_lon,location_type,parent_station,vehicle_type
+place-harsq,Harvard,,42.373362,-71.118956,1,,
+70067,Harvard,Harvard - Red Line - Alewife,42.373362,-71.118956,0,place-harsq,1
+place-cntsq,Central,,42.365486,-71.103802,1,,
+70069,Central,Central - Red Line - Ashmont/Braintree,42.365486,-71.103802,0,place-cntsq,1
+place-harvd,Harvard Avenue,,42.350243,-71.131355,1,,
+70130,Harvard Avenue,Harvard Avenue - Green Line - (B) Boston College,42.350243,-71.131355,0,place-harvd,0
+place-kencl,Kenmore,,42.348949,-71.095169,1,,
+71151,Kenmore,Kenmore - Green Line - Park Street & North,42.348949,-71.095169,0,place-kencl,0
+1001,Brighton Ave @ Linden St,,42.353,-71.1318,0,,3
+1002,Western Ave @ Soldiers Field,,42.364,-71.125,0,,3

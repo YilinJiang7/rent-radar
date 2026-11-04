@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rent Radar</title>
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="brand"><span class="dot"></span> Rent Radar <small>rental map + AI neighborhood check for Harvard/MIT students</small></div>
+  <div id="status" class="status">loading...</div>
+</header>
+<main>
+  <aside id="side">
+    <section class="card">
+      <h2>Ask</h2>
+      <textarea id="q" rows="3" placeholder="e.g. budget 2500, class at MIT, hate noise, bike home at night"></textarea>
+      <div class="row">
+        <label>Campus
+          <select id="campus"></select>
+        </label>
+        <button id="ask">Ask the agent</button>
+      </div>
+      <div class="examples" id="examples"></div>
+      <div id="answer" class="answer hidden"></div>
+      <details id="tracebox" class="hidden"><summary>What the agent did</summary><div id="trace"></div></details>
+    </section>
+
+    <section class="card">
+      <h2>Filters</h2>
+      <div class="grid2">
+        <label>Max rent <input id="maxPrice" type="number" step="50" placeholder="any"></label>
+        <label>Min beds <input id="minBeds" type="number" min="0" max="6" placeholder="any"></label>
+      </div>
+      <label class="check"><input id="hideStale" type="checkbox"> Hide listings on market &gt; 180 days</label>
+    </section>
+
+    <section class="card">
+      <h2>Weights <button id="resetW" class="link">reset</button></h2>
+      <p class="hint">0 = ignore, 5 = matters most. Hover a factor to see its formula.</p>
+      <div id="weights"></div>
+    </section>
+
+    <section class="card">
+      <h2>Top listings <span id="count" class="muted"></span></h2>
+      <ol id="list" class="list"></ol>
+    </section>
+  </aside>
+
+  <div id="map"></div>
+
+  <aside id="detail" class="hidden">
+    <button id="close" class="close" aria-label="Close">×</button>
+    <div id="detailBody"></div>
+  </aside>
+</main>
+<script src="/static/vendor/leaflet/leaflet.js"></script>  <!-- Leaflet 1.9.4, BSD-2, vendored -->
+<script src="/static/app.js"></script>
+</body>
+</html>

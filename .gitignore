@@ -1,0 +1,14 @@
+# secrets
+.env
+# environments / caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# raw downloads (large, and RentCast data includes agent contact info)
+data/raw/
+# built databases
+data/*.sqlite
+# local working files (not submitted)
+_local/
+.DS_Store
