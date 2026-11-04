@@ -28,7 +28,7 @@ try:
 except ImportError:  # python-dotenv is optional
     pass
 
-from . import config
+from . import config, summary
 from .agent.agent import Agent
 from .agent.tools import get_listing_evidence
 from .scoring import DEFAULT_WEIGHTS, FACTORS
@@ -94,6 +94,8 @@ def listings(campus: str = config.DEFAULT_CAMPUS, weights: Optional[str] = None,
             "score": sc["total"], "coverage": sc["weight_coverage_pct"],
             "bike_min": (f["commute"].get(campus) or {}).get("bike_min"),
             "records_3y": (f.get("building") or {}).get("records_window"),
+            # staleness is shown as its own tag on the card, so keep the 3 flag slots for the place itself
+            "flags": summary.top_flags([x for x in summary.flags(l, f, campus) if x["topic"] != "listing"], 3),
         })
     return {"count": len(out), "campus": campus, "listings": out}
 
@@ -105,7 +107,11 @@ def listing(listing_id: str, campus: str = config.DEFAULT_CAMPUS, weights: Optio
     e = get_listing_evidence(s, listing_id, campus, _weights(weights), budget)
     if "error" in e:
         raise HTTPException(404, e["error"])
-    e["records"] = s.records_for(listing_id)
+    recs = s.records_for(listing_id)
+    for r in recs:  # renter-language label + how much it matters
+        r["label"] = summary.SIGNAL_WORDS.get(r["signal"], ("record",))[0]
+        r["serious"] = summary.serious(r["signal"])
+    e["records"] = recs
     return e
 
 

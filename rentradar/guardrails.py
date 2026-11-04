@@ -24,11 +24,9 @@ PROTECTED = [
 PROTECTED_RE = [re.compile(p, re.I) for p in PROTECTED]
 
 REDIRECT = (
-    "I can't rank or describe places by who lives there (race, religion, national origin, family "
-    "status, disability, source of income and other protected traits) -- that is housing "
-    "steering under the Fair Housing Act and Massachusetts law. I can rank by things that are "
-    "about the building and street: city complaints and violations at the address, the owner's "
-    "record, crash history, traffic noise, commute and price. Tell me which of those matter to you."
+    "I can't rank places by who lives there (race, religion, national origin, family status, "
+    "disability, source of income and other protected traits). That would be housing steering under "
+    "fair-housing law. I can rank by the building, its owner, street safety, noise, commute and price."
 )
 
 SAFETY_NOTE = (

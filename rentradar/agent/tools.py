@@ -8,13 +8,14 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional
 
-from .. import config
+from .. import config, summary
 from ..scoring import DEFAULT_WEIGHTS, FACTORS
 from ..store import Store
 
 
 def _brief(l: dict, f: dict, score: dict, campus: str) -> dict:
     c = f["commute"].get(campus, {})
+    fl = summary.top_flags(summary.flags(l, f, campus), 4)
     b = f.get("building") or {}
     s = f.get("street") or {}
     return {
@@ -34,6 +35,7 @@ def _brief(l: dict, f: dict, score: dict, campus: str) -> dict:
         "injury_crashes_150m": s.get("injury_crashes") if s.get("available") else None,
         "nearest_station": (f.get("transit") or {}).get("station"),
         "missing_factors": [x["factor"] for x in score["breakdown"] if x.get("missing")],
+        "flags": [x["text"] for x in fl],
     }
 
 
@@ -110,6 +112,7 @@ def get_listing_evidence(store: Store, listing_id: str, campus: str = config.DEF
     score = store.scorer.score(l, f, campus, weights, budget)
     return {
         "id": l["id"],
+        "flags": summary.flags(l, f, campus),
         "address": l["address"], "area": l["area"], "city": l["city"],
         "price": l["price"], "bedrooms": l["bedrooms"], "bathrooms": l["bathrooms"], "sqft": l.get("sqft"),
         "property_type": l.get("property_type"), "listed_date": l.get("listed_date"),

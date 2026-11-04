@@ -4,59 +4,60 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rent Radar</title>
-  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">  <!-- Leaflet 1.9.4, BSD-2, vendored -->
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<header>
-  <div class="brand"><span class="dot"></span> Rent Radar <small>rental map + AI neighborhood check for Harvard/MIT students</small></div>
-  <div id="status" class="status">loading...</div>
+<header class="top">
+  <div class="brand"><span class="dot" aria-hidden="true"></span>Rent Radar</div>
+  <div class="seg" id="campusSeg" role="radiogroup" aria-label="Your campus"></div>
+  <button class="ghost" id="aboutBtn">About the data</button>
 </header>
+
 <main>
-  <aside id="side">
-    <section class="card">
-      <h2>Ask</h2>
-      <textarea id="q" rows="3" placeholder="e.g. budget 2500, class at MIT, hate noise, bike home at night"></textarea>
-      <div class="row">
-        <label>Campus
-          <select id="campus"></select>
-        </label>
-        <button id="ask">Ask the agent</button>
-      </div>
-      <div class="examples" id="examples"></div>
-      <div id="answer" class="answer hidden"></div>
-      <details id="tracebox" class="hidden"><summary>What the agent did</summary><div id="trace"></div></details>
-    </section>
+  <aside class="panel" id="panel">
+    <form class="ask" id="askForm">
+      <label for="q" class="sr">Describe what you need</label>
+      <textarea id="q" rows="2" placeholder="What do you need? e.g. under $2,500, quiet, bike to MIT"></textarea>
+      <button type="submit" id="askBtn" class="primary">Ask</button>
+    </form>
+    <div class="chips" id="examples"></div>
 
-    <section class="card">
-      <h2>Filters</h2>
+    <section id="understood" class="understood hidden"></section>
+
+    <div class="listhead">
+      <h2 id="listTitle">Best matches</h2>
+      <button class="ghost small" id="adjustBtn" aria-expanded="false">Adjust</button>
+    </div>
+
+    <section class="adjust hidden" id="adjust">
       <div class="grid2">
-        <label>Max rent <input id="maxPrice" type="number" step="50" placeholder="any"></label>
-        <label>Min beds <input id="minBeds" type="number" min="0" max="6" placeholder="any"></label>
+        <label>Max rent<input id="maxPrice" type="number" step="100" placeholder="Any"></label>
+        <label>Min bedrooms<input id="minBeds" type="number" min="0" max="6" placeholder="Any"></label>
       </div>
-      <label class="check"><input id="hideStale" type="checkbox"> Hide listings on market &gt; 180 days</label>
-    </section>
-
-    <section class="card">
-      <h2>Weights <button id="resetW" class="link">reset</button></h2>
-      <p class="hint">0 = ignore, 5 = matters most. Hover a factor to see its formula.</p>
+      <label class="toggle"><input id="hideStale" type="checkbox"> Hide listings older than 180 days</label>
+      <h3>What matters to you</h3>
       <div id="weights"></div>
+      <button class="link" id="resetW" type="button">Reset to defaults</button>
     </section>
 
-    <section class="card">
-      <h2>Top listings <span id="count" class="muted"></span></h2>
-      <ol id="list" class="list"></ol>
-    </section>
+    <ol class="cards" id="cards"></ol>
   </aside>
 
-  <div id="map"></div>
+  <div id="map" aria-label="Map of listings"></div>
 
-  <aside id="detail" class="hidden">
-    <button id="close" class="close" aria-label="Close">×</button>
+  <aside class="detail hidden" id="detail" aria-label="Listing details">
+    <button class="close" id="closeDetail" aria-label="Close">×</button>
     <div id="detailBody"></div>
   </aside>
 </main>
-<script src="/static/vendor/leaflet/leaflet.js"></script>  <!-- Leaflet 1.9.4, BSD-2, vendored -->
+
+<dialog id="about">
+  <button class="close" id="closeAbout" aria-label="Close">×</button>
+  <div id="aboutBody"></div>
+</dialog>
+
+<script src="/static/vendor/leaflet/leaflet.js"></script>
 <script src="/static/app.js"></script>
 </body>
 </html>
