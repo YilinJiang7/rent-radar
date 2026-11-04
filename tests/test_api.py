@@ -11,7 +11,10 @@ def client(fixture_db):
     from rentradar import api
     api.get_store.cache_clear()
     api.get_agent.cache_clear()
-    return TestClient(api.app)
+    yield TestClient(api.app)
+    api.get_store().close()
+    api.get_store.cache_clear()
+    api.get_agent.cache_clear()
 
 
 def test_meta(client):

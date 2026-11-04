@@ -39,7 +39,7 @@ make run                         # http://127.0.0.1:8000
 Tests and evaluation:
 
 ```bash
-make test           # 39 unit/integration tests on the fixtures, no network
+make test           # 44 unit/integration tests on the fixtures, no network
 make eval           # 20 fixed agent queries -> eval/results/agent_<mode>_<date>.json
 ```
 
@@ -87,7 +87,7 @@ The score is a weighted average of 0–100 factor scores. Weights run from 0 to 
 | Building record | 3 | 100·exp(−severity-weighted records in the last 3 years / 6) |
 | Owner record | 2 | Starts at 70. +20 if owner-occupied, −5 per serious record across the owner's properties (max −60), −10 if mailing address is outside MA. |
 | Street safety | 2 | Rank of (injury + 2 × pedestrian/bike crashes within 150 m + after-dark bike crashes along the route) |
-| Traffic noise | 1 | Rank of the busiest nearby road's AADT |
+| Traffic noise | 1 | Rank of the busiest nearby road's AADT. No traffic count within 100 m counts as no data. |
 | T access | 1 | 100 at ≤5 min walk, 0 at ≥20 min |
 | Freshness | 1 | 100 at ≤14 days on market, 0 at ≥365 days |
 
@@ -140,7 +140,7 @@ docs/           architecture, data sources, midpoint report, proposal
 
 ## Testing and evaluation
 
-- `make test` runs **39 tests** on the synthetic fixtures. They cover address parsing and ranges, spatial index, ingest scope and zip correction, schema errors, building/owner/street/transit features, scoring (missing factors excluded, weights change the ranking, budget curve), planner, grounding, guardrail, tools, the offline agent, the LLM tool loop with a scripted model (including the grounding retry and the fallback on a 429), and the HTTP API.
+- `make test` runs **44 tests** on the synthetic fixtures. They cover address parsing and ranges, spatial index, ingest scope and zip correction, schema errors, building/owner/street/transit features, scoring (missing factors excluded, weights change the ranking, budget curve), planner, grounding, guardrail, tools, the offline agent, the LLM tool loop with a scripted model (including the grounding retry and the fallback on a 429), and the HTTP API.
 - `make eval` runs **20 fixed queries** and checks hard constraints (budget and bedrooms), made-up numbers, guardrail refusals and the safety note. The proposal target is 0 made-up numbers across the 20 tests. The latest results are in `eval/results/`.
 - `eval/signal_agreement.py sample|score` hand-labels 200 RentSmart descriptions and measures agreement for the rules and the LLM. The proposal target is ≥85%.
 

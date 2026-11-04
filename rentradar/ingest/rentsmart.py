@@ -62,7 +62,7 @@ def load(paths: Iterable[Path], zips: Optional[Set[str]] = None) -> List[Dict]:
                 "num_lo": key.lo if key else None,
                 "num_hi": key.hi if key else None,
                 "zip": z,
-                "parcel": (g("parcel") or "").strip() or None,
+                "parcel": address.norm_pid(g("parcel")) or None,
                 "owner": (g("owner") or "").strip().upper() or None,
                 "lat": to_float(g("latitude")),
                 "lon": to_float(g("longitude")),

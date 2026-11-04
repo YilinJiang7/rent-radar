@@ -37,12 +37,46 @@ def _brief(l: dict, f: dict, score: dict, campus: str) -> dict:
     }
 
 
+AREA_ALIASES = {
+    "allston": ["02134"], "brighton": ["02135"], "fenway": ["02215"], "kenmore": ["02215"],
+    "harvard square": ["02138"], "harvard sq": ["02138"], "west cambridge": ["02138"],
+    "central": ["02139"], "central square": ["02139"], "central sq": ["02139"], "cambridgeport": ["02139"],
+    "porter": ["02140"], "porter square": ["02140"], "north cambridge": ["02140"],
+    "east cambridge": ["02141"], "kendall": ["02142"], "kendall square": ["02142"], "kendall sq": ["02142"],
+    "boston": config.BOSTON_ZIPS, "cambridge": config.CAMBRIDGE_ZIPS,
+}
+
+
+def resolve_areas(areas: List[str]):
+    """Names / zips -> zip list. Returns (zips, unknown_names)."""
+    zips, unknown = [], []
+    for a in areas:
+        key = str(a).strip().lower()
+        if key in config.AREAS:
+            hit = [key]
+        elif key in AREA_ALIASES:
+            hit = AREA_ALIASES[key]
+        else:
+            hit = [z for z, v in config.AREAS.items() if v[0].lower() == key or key in v[0].lower().split(" / ")]
+        if hit:
+            zips += [z for z in hit if z not in zips]
+        else:
+            unknown.append(a)
+    return zips, unknown
+
+
 def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: Optional[float] = None,
                   min_beds: Optional[float] = None, max_beds: Optional[float] = None,
                   areas: Optional[List[str]] = None, max_bike_min: Optional[float] = None,
                   include_stale: bool = False, weights: Optional[Dict[str, float]] = None,
                   budget: Optional[float] = None, limit: int = 5) -> dict:
     campus = campus if campus in config.CAMPUSES else config.DEFAULT_CAMPUS
+    if areas:
+        zips, unknown = resolve_areas(areas)
+        if unknown:
+            return {"error": f"unknown area(s) {unknown}. Use one of: " +
+                    ", ".join(f"{v[0]} ({z})" for z, v in config.AREAS.items()) + ", or Boston / Cambridge."}
+        areas = zips
     rows = store.filter(max_price=max_price, min_beds=min_beds, max_beds=max_beds, areas=areas,
                         campus=campus, max_bike_min=max_bike_min, include_stale=include_stale)
     stale_hidden = 0
@@ -67,6 +101,7 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
 
 def get_listing_evidence(store: Store, listing_id: str, campus: str = config.DEFAULT_CAMPUS,
                          weights: Optional[Dict[str, float]] = None, budget: Optional[float] = None) -> dict:
+    campus = campus if campus in config.CAMPUSES else config.DEFAULT_CAMPUS
     l = store.listings.get(listing_id)
     if not l:
         return {"error": f"unknown listing_id {listing_id}"}
@@ -91,6 +126,7 @@ def get_listing_evidence(store: Store, listing_id: str, campus: str = config.DEF
 
 def compare_listings(store: Store, listing_ids: List[str], campus: str = config.DEFAULT_CAMPUS,
                      weights: Optional[Dict[str, float]] = None, budget: Optional[float] = None) -> dict:
+    campus = campus if campus in config.CAMPUSES else config.DEFAULT_CAMPUS
     out = []
     for lid in (listing_ids or [])[:5]:
         l = store.listings.get(lid)
@@ -159,8 +195,9 @@ DECLARATIONS = [
             "required": ["listing_ids"],
         },
     },
-    {"name": "area_overview", "description": "Listing counts and median rent per neighborhood.", "parameters": {"type": "object", "properties": {}}},
-    {"name": "explain_factors", "description": "How each score factor is computed and the default weights.", "parameters": {"type": "object", "properties": {}}},
+    # no-argument tools omit `parameters` (Gemini rejects an OBJECT with empty properties)
+    {"name": "area_overview", "description": "Listing counts and median rent per neighborhood."},
+    {"name": "explain_factors", "description": "How each score factor is computed and the default weights."},
 ]
 
 REGISTRY: Dict[str, Callable[..., Any]] = {

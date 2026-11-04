@@ -32,7 +32,7 @@ Rent Radar is a rental map plus an AI neighborhood check for Harvard and MIT stu
 - The data pipeline (fetch → ingest → match → evidence → SQLite), with a coverage report.
 - A map of all in-scope listings, colored by score. Each listing opens an evidence card with the score breakdown, building records (with IDs), owner of record, commute, transit, crashes and traffic.
 - The agent: Gemini function calling over 5 tools, citations, a grounding check and an offline fallback.
-- Tests: 39 pytest cases on synthetic fixtures. The 20-case agent evaluation is scripted.
+- Tests: 44 pytest cases on synthetic fixtures. The 20-case agent evaluation is scripted.
 
 ## 4. Plan to the final (12/3)
 

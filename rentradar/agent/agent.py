@@ -101,8 +101,11 @@ class Agent:
         plan = ranked = None
         answer = ""
         retried = False
-        for _step in range(config.AGENT_MAX_STEPS):
-            content = self.model.generate(SYSTEM_PROMPT, contents, tools.DECLARATIONS)
+        for step in range(config.AGENT_MAX_STEPS):
+            last = step == config.AGENT_MAX_STEPS - 1
+            if last:  # force a written answer on the final step
+                contents.append({"role": "user", "parts": [{"text": "Step limit reached: answer now from the tool results you have, without calling tools."}]})
+            content = self.model.generate(SYSTEM_PROMPT, contents, tools.DECLARATIONS, force_text=last)
             contents.append(content)
             calls = [p["functionCall"] for p in content.get("parts", []) if "functionCall" in p]
             if calls:
@@ -113,14 +116,18 @@ class Agent:
                     outputs.append(out)
                     trace.append({"tool": c["name"], "args": args, "result": _summary(c["name"], out)})
                     if c["name"] == "rank_listings" and "results" in out:
-                        plan = plan or {"args": args, "weights_used": out["weights_used"], "filters": out["filters"]}
+                        # plan and ranked always come from the same (latest) ranking call
+                        plan = {"args": args, "weights_used": out["weights_used"], "filters": out["filters"]}
                         ranked = out
-                    responses.append({"functionResponse": {"name": c["name"], "response": {"result": out}}})
+                    fr = {"name": c["name"], "response": {"result": out}}
+                    if c.get("id"):
+                        fr["id"] = c["id"]
+                    responses.append({"functionResponse": fr})
                 contents.append({"role": "user", "parts": responses})
                 continue
             answer = "".join(p.get("text", "") for p in content.get("parts", [])).strip()
             g = grounding.check(answer, outputs, query)
-            if not g["ok"] and not retried:
+            if not g["ok"] and not retried and not last:
                 retried = True
                 contents.append({"role": "user", "parts": [{"text": (
                     "Grounding check failed: these numbers are not in any tool result: "

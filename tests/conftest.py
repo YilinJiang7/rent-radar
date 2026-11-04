@@ -21,4 +21,6 @@ def fixture_db(tmp_path_factory):
 
 @pytest.fixture(scope="session")
 def store(fixture_db):
-    return Store(fixture_db)
+    s = Store(fixture_db)
+    yield s
+    s.close()

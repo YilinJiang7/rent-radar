@@ -58,4 +58,4 @@ BIKE_M_PER_MIN = 250          # ~15 km/h
 
 # --- LLM ----------------------------------------------------------------------
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-AGENT_MAX_STEPS = int(os.getenv("AGENT_MAX_STEPS", "6"))
+AGENT_MAX_STEPS = int(os.getenv("AGENT_MAX_STEPS", "8"))

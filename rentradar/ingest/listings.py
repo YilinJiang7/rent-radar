@@ -51,8 +51,11 @@ def load(paths: Iterable[Path], today: datetime = None) -> List[Dict]:
             dom = r.get("daysOnMarket")
             if dom is None and r.get("listedDate"):
                 try:
-                    dom = (today - datetime.fromisoformat(r["listedDate"].replace("Z", "+00:00"))).days
-                except ValueError:
+                    ld = datetime.fromisoformat(r["listedDate"].replace("Z", "+00:00"))
+                    if ld.tzinfo is None:
+                        ld = ld.replace(tzinfo=timezone.utc)
+                    dom = (today - ld).days
+                except (ValueError, TypeError):
                     dom = None
             agent = r.get("listingAgent") or {}
             office = r.get("listingOffice") or {}

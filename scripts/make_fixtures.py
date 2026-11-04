@@ -56,7 +56,9 @@ RENTSMART = [
     ("2025-08-08", "Civic Maintenance Requests", "Street Light Outages", "41 Sample Ave, 02134", "02134", "P2", "JANE DOE", 42.3550, -71.1290),
     ("2026-03-03", "Building Violations", "Unsafe and Dangerous - porch", "7 Fixture Road, 02135", "02135", "P3", "EXAMPLE HOLDINGS LLC", 42.3490, -71.1560),
     ("2026-04-04", "Housing Complaints", "Water leak from ceiling, mold", "99 Other St, 02135", "02135", "P9", "EXAMPLE HOLDINGS LLC", 42.3400, -71.1600),
-    ("2025-09-09", "Housing Complaints", "Loud party noise", "88 Testing Terrace, 02215", "02215", "P4", "SMITH JOHN", 42.3470, -71.1000),
+    ("2025-09-09", "Housing Complaints", "Loud party noise", "88 Testing Terrace, 02215", "02215", "0000000004", "SMITH JOHN", 42.3470, -71.1000),
+    # same parcel as 3 Placeholder Pl, but filed under a corner address -> only the parcel route finds it
+    ("2026-01-20", "Housing Complaints", "No heat in unit", "1 Corner Rd, 02135", "02135", "5.0", "PLACE OWNER", 42.3600, -71.1700),
 ]
 
 ASSESSMENT = [
@@ -65,7 +67,8 @@ ASSESSMENT = [
     ("P2", "40", "42", "SAMPLE AVE", "", "2134", "JANE DOE", "Y", "BOSTON", "MA", "TWO-FAM DWELLING", "1925", "2"),
     ("P3", "7", "", "FIXTURE RD", "", "02135", "EXAMPLE HOLDINGS LLC", "N", "WILMINGTON", "DE", "SINGLE FAM DWELLING", "1950", "1"),
     ("P9", "99", "", "OTHER ST", "", "02135", "EXAMPLE HOLDINGS LLC", "N", "WILMINGTON", "DE", "THREE-FAM DWELLING", "1900", "3"),
-    ("P4", "88", "", "TESTING TER", "5", "02215", "SMITH JOHN", "N", "BOSTON", "MA", "CONDO UNIT", "1999", "1"),
+    ("4", "88", "", "TESTING TER", "5", "02215", "SMITH JOHN", "N", "BOSTON", "MA", "CONDO UNIT", "1999", "1"),
+    ("0000000005", "3", "", "PLACEHOLDER PL", "", "02135", "PLACE OWNER", "Y", "BOSTON", "MA", "TWO-FAM DWELLING", "1920", "2"),
 ]
 
 STOPS = [

@@ -19,10 +19,10 @@ def test_missing_factors_are_excluded_not_guessed(store):
 
 def test_bad_building_scores_lower(store):
     s1 = store.scorer.score(store.listings["FX-1"], store.features["FX-1"], "mit")
-    s5 = store.scorer.score(store.listings["FX-5"], store.features["FX-5"], "mit")
-    b1 = next(b for b in s1["breakdown"] if b["factor"] == "building")["score"]
-    b5 = next(b for b in s5["breakdown"] if b["factor"] == "building")["score"]
-    assert b1 < b5 == 100.0
+    s2 = store.scorer.score(store.listings["FX-2"], store.features["FX-2"], "mit")  # one trash record
+    s4 = store.scorer.score(store.listings["FX-4"], store.features["FX-4"], "mit")  # one noise record
+    b = lambda s: next(x for x in s["breakdown"] if x["factor"] == "building")["score"]  # noqa: E731
+    assert b(s1) < b(s2) < 100.0 and b(s4) == b(s2)
 
 
 def test_weights_change_ranking(store):

@@ -34,6 +34,10 @@ class EvidenceIndex:
             if r.get("street_key"):
                 self.rec_by_street[r["street_key"]].append(r)
         self.rec_grid = GridIndex(((r["lat"], r["lon"], r) for r in records if r.get("lat") and r.get("lon")), 100)
+        self.rec_by_parcel: Dict[str, List[dict]] = defaultdict(list)
+        for r in records:
+            if r.get("parcel"):
+                self.rec_by_parcel[r["parcel"]].append(r)
         self.rec_by_owner: Dict[str, List[dict]] = defaultdict(list)
         for r in records:
             if r.get("owner"):
@@ -65,15 +69,33 @@ class EvidenceIndex:
                 if r["num_lo"] is not None and r["num_lo"] <= hi and lo <= r["num_hi"]:
                     exact = r["num_lo"] == lo and r["num_hi"] == hi
                     hits.append((r, "address" if exact else "address_range"))
+        # parcel route: listing address -> assessment parcel ids -> RentSmart records on those parcels
+        seen = {r["record_id"] for r, _m in hits}
+        for pid in self.parcel_ids(listing):
+            for r in self.rec_by_parcel.get(pid, []):
+                if r["record_id"] not in seen:
+                    hits.append((r, "parcel"))
+                    seen.add(r["record_id"])
         if not hits and self.rec_grid.n:
             for _d, r in self.rec_grid.within(listing["lat"], listing["lon"], config.GEO_MATCH_M):
                 hits.append((r, "geo"))
         return hits
 
+    def parcels_for(self, listing: dict) -> List[dict]:
+        sk = listing.get("street_key")
+        if not sk or sk not in self.parcels_by_street:
+            return []
+        return [p for p in self.parcels_by_street[sk] if p["num_lo"] <= listing["num_hi"] and listing["num_lo"] <= p["num_hi"]]
+
+    def parcel_ids(self, listing: dict) -> set:
+        return {p["pid"] for p in self.parcels_for(listing) if p.get("pid")}
+
     def building(self, listing: dict, matches: List[tuple]) -> dict:
         covered = listing.get("city", "").lower() == "boston"
         if not covered or not self.has_records:
             return {"available": False, "reason": "RentSmart covers Boston only" if not covered else "RentSmart not loaded"}
+        if not matches and not listing.get("street_key"):
+            return {"available": False, "reason": "Listing address could not be parsed for matching"}
         cutoff = self.today.year - config.BUILDING_RECORD_YEARS
         recs = [r for r, _m in matches if r["building_level"]]
         window = [r for r in recs if (r.get("year") or 0) > cutoff]
@@ -98,10 +120,7 @@ class EvidenceIndex:
     # -- owner of record -------------------------------------------------------
     def owner(self, listing: dict, matches: List[tuple]) -> dict:
         contact = {"agent": listing.get("agent_name"), "office": listing.get("office_name")}
-        parcels = []
-        sk = listing.get("street_key")
-        if sk and sk in self.parcels_by_street:
-            parcels = [p for p in self.parcels_by_street[sk] if p["num_lo"] <= listing["num_hi"] and listing["num_lo"] <= p["num_hi"]]
+        parcels = self.parcels_for(listing)
         owners = Counter(p["owner"] for p in parcels if p.get("owner"))
         source = "property_assessment"
         if not owners:
@@ -118,7 +137,8 @@ class EvidenceIndex:
         p_recs = [r for r in self.rec_by_owner.get(top, []) if r["building_level"] and (r.get("year") or 0) > cutoff]
         serious = [r for r in p_recs if signals.SEVERITY.get(r["signal"], 0) >= 2.5]
         mail_state = top_parcels[0].get("mail_state") if top_parcels else None
-        owner_occ = any(p.get("owner_occupied") for p in top_parcels) if top_parcels else None
+        occ_vals = [p.get("owner_occupied") for p in top_parcels if p.get("owner_occupied") is not None]
+        owner_occ = any(occ_vals) if occ_vals else None
         return {
             "available": True,
             "source": source,

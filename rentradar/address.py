@@ -59,6 +59,14 @@ def norm_zip(z) -> str:
     return s.zfill(5) if s else ""
 
 
+def norm_pid(pid) -> str:
+    """Boston parcel ids are 10 digits; CSVs sometimes drop zeros or add '.0'."""
+    if pid is None:
+        return ""
+    s = re.sub(r"\D", "", str(pid).split(".")[0])
+    return s.zfill(10) if s else ""
+
+
 def norm_street(name: str) -> str:
     s = name.upper()
     s = re.sub(r"[.,']", " ", s)

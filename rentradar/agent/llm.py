@@ -30,7 +30,7 @@ class LLMError(RuntimeError):
 class ChatModel(Protocol):
     name: str
 
-    def generate(self, system: str, contents: List[dict], tools: List[dict]) -> dict:
+    def generate(self, system: str, contents: List[dict], tools: List[dict], force_text: bool = False) -> dict:
         """Return the model `content` dict: {"role": "model", "parts": [...]}"""
 
 
@@ -44,13 +44,16 @@ class GeminiModel:
         self.client = httpx.Client(timeout=timeout)
         self.usage = {"prompt_tokens": 0, "output_tokens": 0, "calls": 0}
 
-    def generate(self, system: str, contents: List[dict], tools: List[dict]) -> dict:
+    def generate(self, system: str, contents: List[dict], tools: List[dict], force_text: bool = False) -> dict:
         body = {
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": contents,
-            "tools": [{"functionDeclarations": tools}] if tools else [],
             "generationConfig": {"temperature": 0.2},
         }
+        if tools:
+            body["tools"] = [{"functionDeclarations": tools}]
+            if force_text:  # keep declarations (history has calls) but forbid new ones
+                body["toolConfig"] = {"functionCallingConfig": {"mode": "NONE"}}
         r = self.client.post(API_URL.format(model=self.model), json=body,
                              headers={"x-goog-api-key": self.api_key, "Content-Type": "application/json"})
         if r.status_code != 200:
@@ -81,7 +84,8 @@ class ScriptedModel:
         self.seen: List[List[dict]] = []
         self.usage = {"calls": 0}
 
-    def generate(self, system: str, contents: List[dict], tools: List[dict]) -> dict:
+    def generate(self, system: str, contents: List[dict], tools: List[dict], force_text: bool = False) -> dict:
+        self.forced = getattr(self, "forced", []) + [force_text]
         self.seen.append([dict(c) for c in contents])
         self.usage["calls"] += 1
         if not self.turns:

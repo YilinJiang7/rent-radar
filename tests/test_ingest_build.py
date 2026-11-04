@@ -29,7 +29,7 @@ def test_resolve_aliases_and_error_message():
 def test_build_report(store):
     src = store.meta["sources"]
     assert src["listings"]["rows"] == 8
-    assert src["rentsmart"]["rows"] == 9
+    assert src["rentsmart"]["rows"] == 10
     assert store.meta["fixtures"] is True
     link = src["linking"]
     assert link["zip_corrected"] == 1 and link["stale_listings"] == 1
@@ -44,6 +44,11 @@ def test_building_match_exact_range_and_window(store):
     f2 = store.features["FX-2"]["building"]  # 40-42 Sample Ave matches "41 Sample Ave"
     assert f2["match_type"] == "address_range"
     assert f2["records_window"] == 1          # trash; the street light is not building-level
+
+
+def test_parcel_route_finds_record_filed_under_other_address(store):
+    b = store.features["FX-5"]["building"]  # 3 Placeholder Pl; record filed as "1 Corner Rd" on its parcel
+    assert b["match_type"] == "parcel" and b["by_signal"] == {"heat_hot_water": 1}
 
 
 def test_cambridge_has_no_rentsmart(store):

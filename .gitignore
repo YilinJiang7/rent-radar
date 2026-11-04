@@ -8,7 +8,7 @@ __pycache__/
 # raw downloads (large, and RentCast data includes agent contact info)
 data/raw/
 # built databases
-data/*.sqlite
+data/*.sqlite*
 # local working files (not submitted)
 _local/
 .DS_Store

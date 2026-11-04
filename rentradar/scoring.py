@@ -21,7 +21,7 @@ FACTORS: Dict[str, Dict[str, str]] = {
     "building": {"label": "Building record", "how": "City complaints + violations at this address in the last 3 years, weighted by severity (heat, pests, mold, safety count most): 100 x exp(-weighted/6)."},
     "landlord": {"label": "Owner record", "how": "Start 70; +20 if owner-occupied; -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA."},
     "street_safety": {"label": "Street safety", "how": "Rank of (injury crashes + 2 x pedestrian/bike crashes) within 150 m, 2021-2025, plus dark-hour bike crashes along the line to campus (fewer = higher)."},
-    "quiet": {"label": "Traffic noise", "how": "Rank of the busiest road (AADT, vehicles/day) within 100 m (quieter = higher)."},
+    "quiet": {"label": "Traffic noise", "how": "Rank of the busiest road (AADT, vehicles/day) within 100 m among listings with a traffic count (quieter = higher). No count nearby = no data."},
     "freshness": {"label": "Listing freshness", "how": "Days on market: 100 at <=14 days, 0 at >=365 days. Very old listings are often stale or already rented."},
 }
 
@@ -67,8 +67,8 @@ class Scorer:
         self.ppb = sorted(_ppb(l) for l in listings)
         self.street = {c: sorted(v for v in (_street_raw(features[l["id"]], c) for l in listings) if v is not None)
                        for c in ("mit", "harvard", "seas")}
-        self.aadt = sorted((features[l["id"]].get("noise") or {}).get("max_aadt_100m") or 0
-                           for l in listings if (features[l["id"]].get("noise") or {}).get("available"))
+        self.aadt = sorted((features[l["id"]].get("noise") or {})["max_aadt_100m"]
+                           for l in listings if (features[l["id"]].get("noise") or {}).get("max_aadt_100m"))
 
     def factor_scores(self, listing: dict, f: dict, campus: str, budget: Optional[float] = None) -> Dict[str, Optional[float]]:
         out: Dict[str, Optional[float]] = {}
@@ -112,7 +112,8 @@ class Scorer:
         out["street_safety"] = _rank_score(self.street.get(campus, []), raw) if raw is not None else None
 
         n = f.get("noise") or {}
-        out["quiet"] = _rank_score(self.aadt, n.get("max_aadt_100m") or 0) if n.get("available") else None
+        # no traffic count within 100 m = no data (not "quiet")
+        out["quiet"] = _rank_score(self.aadt, n["max_aadt_100m"]) if n.get("available") and n.get("max_aadt_100m") else None
 
         dom = (f.get("listing") or {}).get("days_on_market")
         out["freshness"] = _lin(dom, 14, 365) if dom is not None else None

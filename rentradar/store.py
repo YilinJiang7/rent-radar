@@ -30,6 +30,9 @@ class Store:
         self.meta = db.get_meta(self.conn, "build", {})
         self.scorer = Scorer(list(self.listings.values()), self.features)
 
+    def close(self) -> None:
+        self.conn.close()
+
     # -- queries -------------------------------------------------------------
     def filter(self, max_price=None, min_price=None, min_beds=None, max_beds=None, areas=None,
                cities=None, campus=None, max_bike_min=None, include_stale=True, property_types=None) -> List[dict]:
@@ -45,7 +48,7 @@ class Store:
                 continue
             if max_beds is not None and beds > max_beds:
                 continue
-            if areas_l and not ({l["area"].lower(), l["area_zip"]} & areas_l or any(a in l["area"].lower() for a in areas_l)):
+            if areas_l and not ({l["area"].lower(), l["area_zip"]} & areas_l):
                 continue
             if cities and (l.get("city") or "").lower() not in {c.lower() for c in cities}:
                 continue

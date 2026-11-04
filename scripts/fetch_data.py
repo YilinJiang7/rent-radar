@@ -27,6 +27,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw"
 CKAN = "https://data.boston.gov/api/3/action/package_show?id={slug}"
+RENTSMART_DUMP = "https://data.boston.gov/datastore/dump/dc615ff7-2ff3-416a-922b-f0f334f085d0"
 UA = "rent-radar/0.2 (MIT 1.125 student project)"
 
 
@@ -65,7 +66,13 @@ def fetch_rentsmart() -> None:
         print("  saved", dest.stat().st_size // 1_000_000, "MB")
     except Exception as e:  # noqa: BLE001
         print("  error:", e)
-        manual("rentsmart", dest, "the RentSmart CSV")
+        try:  # CKAN datastore dump of the known RentSmart resource (2016-present)
+            print("  trying datastore dump", RENTSMART_DUMP)
+            curl(RENTSMART_DUMP, dest)
+            print("  saved", dest.stat().st_size // 1_000_000, "MB")
+        except Exception as e2:  # noqa: BLE001
+            print("  error:", e2)
+            manual("rentsmart", dest, "the RentSmart CSV")
 
 
 def fetch_assessment() -> None:

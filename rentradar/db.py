@@ -83,8 +83,10 @@ def init(conn: sqlite3.Connection) -> None:
 
 
 def reset(path: Path) -> sqlite3.Connection:
-    if path.exists():
-        path.unlink()
+    # remove the old DB and any leftover journal / WAL files from an interrupted build
+    for p in (path, Path(f"{path}-journal"), Path(f"{path}-wal"), Path(f"{path}-shm")):
+        if p.exists():
+            p.unlink()
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = connect(path)
     init(conn)

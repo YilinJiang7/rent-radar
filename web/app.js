@@ -212,7 +212,8 @@ async function ask() {
     await loadListings();
     const ids = (r.ranked || []).map((x) => x.id);
     drawMarkers(ids);
-    if (ids.length) map.fitBounds(L.latLngBounds(ids.map((id) => state.markers.get(id)).filter(Boolean).map((m) => m.getLatLng())).pad(0.4));
+    const pts = ids.map((id) => state.markers.get(id)).filter(Boolean).map((m) => m.getLatLng());
+    if (pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.4));
     $("trace").innerHTML = (r.tool_trace || []).map((t) => `<div class="rec"><b>${esc(t.tool)}</b>(${esc(JSON.stringify(t.args))}) → ${esc(t.result)}</div>`).join("");
     $("tracebox").classList.toggle("hidden", !(r.tool_trace || []).length);
   } catch (err) {

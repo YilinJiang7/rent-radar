@@ -1,10 +1,14 @@
 """Grounding check: every number in the agent's answer must come from a tool result.
 
-We extract numeric tokens from the final answer ("$2,450", "12 min", "3.5",
-"02134") and look for each in the set of numbers that appeared anywhere in
-the tool outputs of this conversation. Small integers (0-10) and numbers that
-were in the user's own question are allowed, because they are usually
-counts/ranks ("top 3") or echo the request ("under 2500").
+We extract numeric tokens from the final answer ("$2,450", "12 min", "15min",
+"3br", "$2.4k", "61.3") and look for each in the set of numbers that appeared
+anywhere in the tool outputs of this conversation, plus the user's question.
+Citations like [L:...] / [R:...] are ids, not claims, and are skipped.
+
+Allowed without a source: 0-10 (ranks like "top 3", small counts in prose)
+and 100 (the score scale). Known limitation: the check is per conversation,
+not per listing -- a real number attached to the wrong listing still passes.
+Rounding uses half-up, the way people round (72.5 -> 73).
 
 This is the metric behind the proposal's success criterion
 "0 made-up numbers in 20 agent tests" (eval/run_eval.py).
@@ -13,22 +17,36 @@ from __future__ import annotations
 
 import json
 import re
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any, Iterable, List, Set
 
-NUM_RE = re.compile(r"(?<![\w.])\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(?![\w])")
+# digits not glued to other digits/decimal points; may be followed by letters (15min, 3br, 2.4k)
+NUM_RE = re.compile(r"(?<![\d.,])(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(k\b)?(?![\d])", re.I)
 ID_RE = re.compile(r"\[[^\]]*\]")
 
 
-def _norm(int_part: str, frac: str = None) -> str:
-    s = int_part.replace(",", "")
-    if frac and set(frac) != {"0"}:
-        return f"{int(s)}.{frac.rstrip('0')}"
-    return str(int(s))
+def _canon(d: Decimal) -> str:
+    d = d.normalize()
+    s = format(d, "f")
+    return s.rstrip("0").rstrip(".") if "." in s else s
 
 
 def numbers_in_text(text: str) -> List[str]:
-    text = ID_RE.sub(" ", text or "")  # citations like [L:6-Wait-St...] / [R:123] are ids, not claims
-    return [_norm(m.group(1), m.group(2)) for m in NUM_RE.finditer(text)]
+    text = ID_RE.sub(" ", text or "")
+    out = []
+    for m in NUM_RE.finditer(text):
+        v = Decimal(m.group(1).replace(",", "") + ("." + m.group(2) if m.group(2) else ""))
+        if m.group(3):  # "$2.4k" -> 2400
+            v = v * 1000
+        out.append(_canon(v))
+    return out
+
+
+def _add_number(x: float, out: Set[str]) -> None:
+    d = Decimal(repr(float(x)))
+    out.add(_canon(d))
+    for q in ("1", "0.1", "0.01"):
+        out.add(_canon(d.quantize(Decimal(q), rounding=ROUND_HALF_UP)))
 
 
 def _walk(obj: Any, out: Set[str]) -> None:
@@ -41,18 +59,9 @@ def _walk(obj: Any, out: Set[str]) -> None:
     elif isinstance(obj, bool) or obj is None:
         return
     elif isinstance(obj, (int, float)):
-        f = float(obj)
-        if f.is_integer():
-            out.add(str(int(f)))
-        else:
-            # the value itself plus natural roundings (61.34 -> 61.3, 61)
-            for nd in (2, 1):
-                ip, _, fp = f"{round(f, nd):.{nd}f}".partition(".")
-                out.add(_norm(ip, fp))
-            out.add(str(int(round(f))))
+        _add_number(obj, out)
     elif isinstance(obj, str):
-        for n in numbers_in_text(obj):
-            out.add(n)
+        out.update(numbers_in_text(obj))
 
 
 def allowed_numbers(tool_outputs: Iterable[Any], user_text: str = "") -> Set[str]:

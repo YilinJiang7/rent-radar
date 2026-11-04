@@ -51,12 +51,13 @@ def load(paths: Iterable[Path], zips: Optional[Set[str]] = None) -> List[Dict]:
             if not mail_state and "," in mail_city:  # "BOSTON, MA" style
                 mail_city, mail_state = [s.strip() for s in mail_city.rsplit(",", 1)]
             out.append({
-                "pid": (g("pid") or "").strip(),
+                "pid": address.norm_pid(g("pid")),
                 "street_key": key.street_zip, "num_lo": key.lo, "num_hi": key.hi,
                 "unit": (g("unit_num") or "").strip() or None,
                 "zip": key.zip,
                 "owner": (g("owner") or "").strip().upper() or None,
-                "owner_occupied": 1 if (g("own_occ") or "").strip().upper() in ("Y", "YES", "1", "TRUE") else 0,
+                "owner_occupied": (None if not cols.get("own_occ") else
+                                   1 if (g("own_occ") or "").strip().upper() in ("Y", "YES", "1", "TRUE") else 0),
                 "mail_city": mail_city or None,
                 "mail_state": mail_state or None,
                 "land_use": (g("lu_desc") or "").strip() or None,

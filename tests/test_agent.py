@@ -126,3 +126,28 @@ def test_llm_failure_falls_back_to_offline(store):
 
     r = Agent(store, model=Broken()).run("1 bed under 2500")
     assert r["mode"] == "offline" and "429" in r["fallback_reason"]
+
+
+def test_grounding_catches_unit_glued_numbers_and_rounds_half_up():
+    out = [{"bike_min": 12, "score": 72.5, "price": 2400}]
+    g = grounding.check("15min by bike, 3br, score 73, $2.4k", out)
+    assert g["ungrounded"] == ["15"]  # 3 is a small number; 73 = round-half-up(72.5); 2.4k = 2400
+
+
+def test_area_names_resolve_and_unknown_area_errors(store):
+    out = tools.rank_listings(store, areas=["Kendall Square", "cambridge"], include_stale=True)
+    assert out["count_matching"] == 3 and {r["area"] for r in out["results"]} <= {"Kendall Sq", "Central Sq / Cambridgeport", "Harvard Sq / West Cambridge", "East Cambridge", "Porter / North Cambridge"}
+    assert "error" in tools.rank_listings(store, areas=["Narnia"])
+
+
+def test_no_arg_tools_have_no_empty_parameters():
+    for d in tools.DECLARATIONS:
+        assert "parameters" not in d or d["parameters"]["properties"]
+
+
+def test_last_step_forces_answer_without_tools(store, monkeypatch):
+    from rentradar import config
+    monkeypatch.setattr(config, "AGENT_MAX_STEPS", 3)
+    m = ScriptedModel([{"call": "area_overview"}, {"call": "explain_factors"}, {"text": "Done."}])
+    r = Agent(store, model=m).run("overview")
+    assert m.forced == [False, False, True] and r["answer"] == "Done."
