@@ -49,46 +49,69 @@ def manual(slug: str, dest: Path, hint: str) -> None:
 
 def ckan_resources(slug: str):
     meta = json.loads(curl(CKAN.format(slug=slug)))
-    return meta["result"]["resources"]
+    res = meta["result"]["resources"]
+    # keep a copy so a wrong pick can be diagnosed without another request
+    out = RAW / slug / "_resources.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps([{k: r.get(k) for k in ("id", "name", "format", "url", "last_modified", "created", "size")}
+                               for r in res], indent=1))
+    return res
+
+
+def header(path: Path) -> list:
+    with open(path, encoding="utf-8-sig", errors="replace") as fh:
+        return [c.strip() for c in fh.readline().strip().split(",")]
 
 
 def fetch_rentsmart() -> None:
+    """Record-level RentSmart (one row per complaint/violation, 2016-present).
+
+    The package also lists property-level files (rs_prop_* + JSON columns,
+    split by year built, last updated ~2020); those are NOT what we want, so
+    we download the record-level table by its resource id and check the header.
+    """
     dest = RAW / "rentsmart" / "rentsmart.csv"
     dest.parent.mkdir(parents=True, exist_ok=True)
-    print("RentSmart ->", dest)
+    print("RentSmart (record level) ->", dest)
     try:
-        res = [r for r in ckan_resources("rentsmart") if (r.get("format") or "").upper() == "CSV"]
-        if not res:
-            raise RuntimeError("no CSV resource listed")
-        r = max(res, key=lambda r: r.get("size") or 0)
-        print("  resource:", r.get("name"), r["url"])
-        curl(r["url"], dest)
-        print("  saved", dest.stat().st_size // 1_000_000, "MB")
+        curl(RENTSMART_DUMP, dest)
+        cols = [c.lower() for c in header(dest)]
+        print("  saved", dest.stat().st_size // 1_000_000, "MB; columns:", cols)
+        if "violation_type" not in cols and "description" not in cols:
+            raise RuntimeError("downloaded file is not the record-level table")
     except Exception as e:  # noqa: BLE001
         print("  error:", e)
-        try:  # CKAN datastore dump of the known RentSmart resource (2016-present)
-            print("  trying datastore dump", RENTSMART_DUMP)
-            curl(RENTSMART_DUMP, dest)
-            print("  saved", dest.stat().st_size // 1_000_000, "MB")
-        except Exception as e2:  # noqa: BLE001
-            print("  error:", e2)
-            manual("rentsmart", dest, "the RentSmart CSV")
+        try:
+            ckan_resources("rentsmart")
+            print("  resource list saved to data/raw/rentsmart/_resources.json -- send it to Claude")
+        except Exception:  # noqa: BLE001
+            pass
+        manual("rentsmart", dest, "the record-level 'RENTSMART 2016 - PRESENT' CSV")
+
+
+def _fy(r) -> int:
+    text = f"{r.get('name') or ''} {r.get('url') or ''}".lower()
+    years = [int(y) for y in re.findall(r"20(\d{2})(?!\d)", text)] + [int(y) for y in re.findall(r"fy(\d{2})(?!\d)", text)]
+    return max(years) if years else 0
 
 
 def fetch_assessment() -> None:
     dest = RAW / "assessment" / "assessment.csv"
     dest.parent.mkdir(parents=True, exist_ok=True)
-    print("Property Assessment ->", dest)
+    print("Property Assessment (newest fiscal year) ->", dest)
     try:
-        res = [r for r in ckan_resources("property-assessment") if (r.get("format") or "").upper() == "CSV"]
-
-        def fy(r):
-            m = re.search(r"(?:FY|20)(\d{2,4})", (r.get("name") or "") + " " + r.get("url", ""))
-            return int(m.group(1)[-2:]) if m else 0
-        r = max(res, key=fy)
-        print("  resource:", r.get("name"), r["url"])
+        res = [r for r in ckan_resources("property-assessment")
+               if (r.get("format") or "").upper() == "CSV" and r.get("url")]
+        res.sort(key=lambda r: (_fy(r), r.get("last_modified") or r.get("created") or ""), reverse=True)
+        print("  candidates (newest first):")
+        for r in res[:5]:
+            print(f"    FY{_fy(r):02d}  {r.get('name')}  {r['url']}")
+        r = res[0]
         curl(r["url"], dest)
-        print("  saved", dest.stat().st_size // 1_000_000, "MB")
+        cols = header(dest)
+        print("  saved", dest.stat().st_size // 1_000_000, "MB; columns:", cols[:25], "...")
+        if _fy(r) < 24:
+            print("  WARNING: newest file found is FY", _fy(r), "-- check data/raw/property-assessment/_resources.json")
     except Exception as e:  # noqa: BLE001
         print("  error:", e)
         manual("property-assessment", dest, "the newest 'FY20xx Property Assessment Data' file")

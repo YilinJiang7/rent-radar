@@ -65,6 +65,9 @@ def load(path: Path) -> List[Dict]:
         elif vt == "3" and (g(r, "location_type") or "0") in ("0", ""):
             out.append({"stop_id": g(r, "stop_id"), "name": g(r, "stop_name"), "lat": lat, "lon": lon, "kind": "bus", "lines": ""})
     for sid, s in stations.items():
-        s["lines"] = ", ".join(sorted(lines[sid]))
+        ls = lines[sid]
+        if any(l.startswith("Green Line ") for l in ls):
+            ls.discard("Green Line")  # keep the branch names only
+        s["lines"] = ", ".join(sorted(ls))
         out.append(s)
     return out

@@ -12,7 +12,7 @@ from . import read_csv, resolve, to_int
 
 ALIASES = {
     "pid": ["parcel_id", "parcel"],
-    "st_num": ["street_number", "st_num1"],
+    "st_num": ["street_number", "st_num1", "st_num_char"],
     "st_num2": ["st_num_2"],
     "st_name": ["street_name", "st_name_full"],
     "st_name_suf": ["st_name_suffix", "suffix"],
