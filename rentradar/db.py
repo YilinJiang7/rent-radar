@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS listings (
     lat REAL, lon REAL,
     price INTEGER, bedrooms REAL, bathrooms REAL, sqft INTEGER,
     property_type TEXT, listed_date TEXT, last_seen TEXT, days_on_market INTEGER,
-    stale INTEGER DEFAULT 0,
+    tier TEXT, stale INTEGER DEFAULT 0,
     agent_name TEXT, office_name TEXT, mls_name TEXT,
     street_key TEXT, num_lo INTEGER, num_hi INTEGER,
     source_file TEXT

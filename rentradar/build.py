@@ -64,8 +64,22 @@ def build(db_path: Path, fixtures: bool = False, today: Optional[date] = None, l
     today = today or (date(2026, 10, 27) if fixtures else date.today())
     report: Dict[str, dict] = {}
 
-    L = listings.load(paths["listings"], today=datetime(today.year, today.month, today.day, tzinfo=timezone.utc))
-    report["listings"] = {"files": [p.name for p in paths["listings"]], "rows": len(L)}
+    # newest snapshot only; the one before it is used to see which listings disappeared
+    snaps = listings.group_snapshots(paths["listings"])
+    snap_date, snap_files = snaps[0]
+    pull = date.fromisoformat(snap_date) if snap_date != "undated" else today
+    L, funnel = listings.load_snapshot(snap_files, today=datetime(pull.year, pull.month, pull.day, tzinfo=timezone.utc))
+    report["listings"] = {"files": [p.name for p in snap_files], "rows": len(L), "snapshot": snap_date,
+                          "older_snapshots_ignored": [d for d, _ in snaps[1:]]}
+    snapshot = {"date": snap_date, "pulled": pull.isoformat(), "files": [p.name for p in snap_files], "funnel": funnel,
+                "rules": {"fresh_days": config.FRESH_DAYS, "backup_days": config.BACKUP_DAYS, "not_seen_days": config.NOT_SEEN_DAYS}}
+    if len(snaps) > 1:
+        prev_date, prev_files = snaps[1]
+        prev_ids = listings.active_ids(prev_files)
+        now_ids = listings.active_ids(snap_files)
+        snapshot["previous"] = {"date": prev_date, "listings": len(prev_ids),
+                                "still_listed": len(prev_ids & now_ids), "gone": len(prev_ids - now_ids),
+                                "new": len(now_ids - prev_ids)}
 
     def optional(name, fn):
         if not paths[name]:
@@ -118,6 +132,22 @@ def build(db_path: Path, fixtures: bool = False, today: Optional[date] = None, l
 
     boston = [l for l in L if (l.get("city") or "").lower() == "boston"]
     linked = {x["listing_id"] for x in links}
+    fmap = {x["listing_id"]: json.loads(x["json"]) for x in feats}
+    bfe = [fmap[l["id"]] for l in boston]
+    # coverage of what the pipeline could retrieve and validate (replaces the "100% of listings" target)
+    coverage = {
+        "boston_listings": len(boston),
+        "fresh": sum(1 for l in boston if l["tier"] == "fresh"),
+        "older": sum(1 for l in boston if l["tier"] == "older"),
+        "address_parsed": sum(1 for l in boston if l.get("street_key")),
+        "found_in_city_parcels": sum(1 for l in boston if idx.parcels_for(l)),
+        "owner_of_record": sum(1 for f in bfe if f["owner"].get("available")),
+        "owner_occupancy_known": sum(1 for f in bfe if f["owner"].get("owner_occupied") is not None),
+        "with_city_records": sum(1 for f in bfe if f["building"].get("evidence") == "records"),
+        "no_records_found": sum(1 for f in bfe if f["building"].get("evidence") == "no_records"),
+        "unmatched": sum(1 for f in bfe if f["building"].get("evidence") == "unmatched"),
+        "cambridge_listings_listing_only": sum(1 for l in L if (l.get("city") or "").lower() == "cambridge"),
+    }
     report["linking"] = {
         "boston_listings": len(boston),
         "boston_listings_with_records": sum(1 for l in boston if l["id"] in linked),
@@ -130,6 +160,9 @@ def build(db_path: Path, fixtures: bool = False, today: Optional[date] = None, l
         "built_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "as_of": today.isoformat(),
         "fixtures": fixtures,
+        "snapshot": snapshot,
+        "coverage": coverage,
+        "records_through": idx.records_through,
         "sources": report,
         "seconds": round(time.time() - t0, 1),
     })
@@ -147,6 +180,10 @@ def main(argv=None):
     print(f"Building {db_path} ...")
     rep = build(db_path, fixtures=a.fixtures)
     print(json.dumps(rep, indent=2))
+    from . import db as _db
+    meta = _db.get_meta(_db.connect(db_path), "build")
+    print("\nSnapshot:", json.dumps(meta["snapshot"], indent=2))
+    print("Coverage (Boston):", json.dumps(meta["coverage"], indent=2))
     return 0
 
 

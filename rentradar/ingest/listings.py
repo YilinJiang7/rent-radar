@@ -1,13 +1,43 @@
-"""RentCast long-term rental listings (JSON arrays saved by scripts/fetch_rentcast.py)."""
+"""RentCast long-term rental listings (JSON arrays saved by scripts/fetch_rentcast.py).
+
+Snapshot rules (feedback 11/4: "define the listing snapshot"):
+  * only the newest snapshot is used -- files named YYYY-MM-DD_<zip>.json share a date;
+  * status Active, with price and coordinates, inside the v1 zip codes;
+  * tiers by days on market: <= FRESH_DAYS "fresh" (shown), <= BACKUP_DAYS "older"
+    (kept as backups, hidden by default), older ones dropped;
+  * dropped if RentCast has not seen it active for NOT_SEEN_DAYS before the pull.
+Every rule's effect is counted in the coverage funnel.
+"""
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+import re
+from collections import Counter
+from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from .. import address, config
 from ..geo import haversine_m, nearest_area
+
+SNAP_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})_")
+
+
+def snapshot_date(p: Path) -> Optional[str]:
+    m = SNAP_RE.match(Path(p).name)
+    return m.group(1) if m else None
+
+
+def group_snapshots(paths: Iterable[Path]) -> List[Tuple[str, List[Path]]]:
+    """[(date or 'undated', files)] newest first; undated files only count when nothing is dated."""
+    groups: Dict[str, List[Path]] = {}
+    for p in paths:
+        groups.setdefault(snapshot_date(p) or "undated", []).append(Path(p))
+    dated = sorted((d for d in groups if d != "undated"), reverse=True)
+    out = [(d, sorted(groups[d])) for d in dated]
+    if "undated" in groups:
+        out.append(("undated", sorted(groups["undated"])))
+    return out
 
 
 def _area_for(row: dict) -> tuple:
@@ -32,31 +62,48 @@ def _area_for(row: dict) -> tuple:
     return None, False
 
 
-def load(paths: Iterable[Path], today: datetime = None) -> List[Dict]:
+def _days(a: str, b: date) -> Optional[int]:
+    try:
+        return (b - date.fromisoformat(a[:10])).days
+    except (ValueError, TypeError):
+        return None
+
+
+def load_snapshot(paths: Iterable[Path], today: datetime = None) -> Tuple[List[Dict], Dict]:
+    """Rows kept + a funnel dict counting what each rule removed."""
     today = today or datetime.now(timezone.utc)
+    pull_day = today.date()
+    f = Counter()
     by_id: Dict[str, Dict] = {}
     for p in paths:
         data = json.loads(Path(p).read_text())
         if isinstance(data, dict):  # tolerate {"listings": [...]}
             data = data.get("listings") or data.get("data") or []
         for r in data:
+            f["retrieved"] += 1
             if r.get("status") and r["status"] != "Active":
+                f["dropped_inactive"] += 1
                 continue
             if r.get("price") in (None, 0) or r.get("latitude") is None:
+                f["dropped_no_price_or_location"] += 1
                 continue
             area_zip, corrected = _area_for(r)
             if area_zip is None:
-                continue  # outside v1 scope
-            key = address.parse(r.get("addressLine1") or r.get("formattedAddress", ""), area_zip if corrected else r.get("zipCode"))
+                f["dropped_outside_scope"] += 1
+                continue
+            last_seen = (r.get("lastSeenDate") or "")[:10]
+            unseen = _days(last_seen, pull_day) if last_seen else None
+            if unseen is not None and unseen > config.NOT_SEEN_DAYS:
+                f["dropped_not_seen_recently"] += 1
+                continue
             dom = r.get("daysOnMarket")
             if dom is None and r.get("listedDate"):
-                try:
-                    ld = datetime.fromisoformat(r["listedDate"].replace("Z", "+00:00"))
-                    if ld.tzinfo is None:
-                        ld = ld.replace(tzinfo=timezone.utc)
-                    dom = (today - ld).days
-                except (ValueError, TypeError):
-                    dom = None
+                dom = _days(r["listedDate"], pull_day)
+            if dom is not None and dom > config.BACKUP_DAYS:
+                f["dropped_older_than_backup"] += 1
+                continue
+            tier = "fresh" if dom is None or dom <= config.FRESH_DAYS else "older"
+            key = address.parse(r.get("addressLine1") or r.get("formattedAddress", ""), area_zip if corrected else r.get("zipCode"))
             agent = r.get("listingAgent") or {}
             office = r.get("listingOffice") or {}
             row = {
@@ -77,9 +124,10 @@ def load(paths: Iterable[Path], today: datetime = None) -> List[Dict]:
                 "sqft": r.get("squareFootage"),
                 "property_type": r.get("propertyType"),
                 "listed_date": (r.get("listedDate") or "")[:10],
-                "last_seen": (r.get("lastSeenDate") or "")[:10],
+                "last_seen": last_seen,
                 "days_on_market": dom,
-                "stale": int(dom is not None and dom > config.STALE_DAYS),
+                "tier": tier,
+                "stale": int(tier == "older"),
                 "agent_name": agent.get("name"),
                 "office_name": office.get("name"),
                 "mls_name": r.get("mlsName"),
@@ -89,6 +137,29 @@ def load(paths: Iterable[Path], today: datetime = None) -> List[Dict]:
                 "source_file": Path(p).name,
             }
             prev = by_id.get(row["id"])
+            if prev is not None:
+                f["duplicates_merged"] += 1
             if prev is None or (row["last_seen"] or "") >= (prev["last_seen"] or ""):
                 by_id[row["id"]] = row
-    return list(by_id.values())
+    rows = list(by_id.values())
+    f["kept"] = len(rows)
+    f["fresh"] = sum(1 for r in rows if r["tier"] == "fresh")
+    f["older"] = sum(1 for r in rows if r["tier"] == "older")
+    return rows, dict(f)
+
+
+def load(paths: Iterable[Path], today: datetime = None) -> List[Dict]:
+    return load_snapshot(paths, today)[0]
+
+
+def active_ids(paths: Iterable[Path]) -> set:
+    """In-scope Active listing ids of a snapshot (for comparing two pulls)."""
+    ids = set()
+    for p in paths:
+        data = json.loads(Path(p).read_text())
+        if isinstance(data, dict):
+            data = data.get("listings") or data.get("data") or []
+        for r in data:
+            if (not r.get("status") or r["status"] == "Active") and _area_for(r)[0]:
+                ids.add(r["id"])
+    return ids

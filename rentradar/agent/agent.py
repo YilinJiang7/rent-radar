@@ -22,8 +22,9 @@ from ..store import Store
 from . import grounding, planner, tools
 from .llm import ChatModel, LLMError, default_model
 
-SYSTEM_PROMPT = """You are Rent Radar, a rental-search assistant for Harvard and MIT students in
-Allston, Brighton, Fenway and Cambridge. You help students rule out bad listings using public records.
+SYSTEM_PROMPT = """You are Rent Radar, a rental-search assistant for Harvard and MIT students. Full evidence
+(city complaints, owner of record, crashes) exists for Boston: Allston, Brighton, Fenway. Cambridge
+listings are listing-only for now. You help students rule out bad listings using public records.
 
 How to work:
 1. Turn the student's needs into tool arguments: budget -> max_price, bedrooms -> min_beds/max_beds,
@@ -43,6 +44,11 @@ Hard rules:
 - Owner of record is public data; say it may differ from the person advertising the listing, and
   remind the student to verify ownership before paying any deposit.
 - If nothing matches, say so and suggest which constraint to relax.
+- No complaint records is limited evidence, not proof the building is fine; say so when it comes up.
+- Every count needs its context: the time window and the radius (e.g. "within 150 m, 2021-2025").
+- Searches cover Boston unless the student names a Cambridge area or asks for Cambridge
+  (include_cambridge). Older listings (91-180 days) are backups that may be gone; include them only
+  if asked or if nothing fresh matches, and label them as older.
 """
 
 
@@ -177,7 +183,7 @@ class Agent:
             out = tools.call(self.store, "area_overview", {})
             lines = [f"**Median asking rent by area** (active listings, data as of {out['data_as_of']}):\n"]
             lines += [f"- {a['area']} ({a['zip']}): ${a['median_price']:,} median across {a['listings']} listings"
-                      f" ({a['stale_listings']} on market over {config.STALE_DAYS} days)" for a in out["areas"]]
+                      f" ({a['stale_listings']} of them older backups, {config.FRESH_DAYS}-{config.BACKUP_DAYS} days)" for a in out["areas"]]
             name = "area_overview"
         elif re.search(r"how .*scor|scor(e|ing) .*(calculated|computed|work|mean)|weights? (mean|work)", q):
             out = tools.call(self.store, "explain_factors", {})
@@ -187,7 +193,7 @@ class Agent:
             name = "explain_factors"
         else:
             return None
-        out = dict(out, stale_days=config.STALE_DAYS)
+        out = dict(out, stale_days=config.STALE_DAYS, backup_days=config.BACKUP_DAYS)
         answer = "\n".join(lines)
         return {"mode": "offline", "model": None, "answer": answer, "plan": None, "ranked": [], "count_matching": None,
                 "tool_trace": [{"tool": name, "args": {}, "result": "ok"}],
@@ -215,14 +221,15 @@ def compose_answer(query: str, ranked: dict, evid: List[dict], p: planner.Plan) 
     changed = [f"{k}={v:g}" for k, v in ranked["weights_used"].items() if v != tools.DEFAULT_WEIGHTS.get(k)]
     lines.append(f"**How I read this:** campus = {ranked['campus']}; " + ("; ".join(read) if read else "no hard filters")
                  + (f"; weights changed: {', '.join(changed)}" if changed else "")
-                 + ("" if f.get("include_stale") else f". Listings on market over {f['stale_days']} days are hidden."))
+                 + ("; Boston only (Cambridge: listing data only)" if f.get("cities") not in ("as areas", None) else "")
+                 + ("" if f.get("include_stale") else f". Showing listings up to {f['stale_days']} days on market."))
     if not ranked["results"]:
         msg = "\nNo fresh listing matches all of these."
         if ranked.get("stale_hidden"):
-            msg += f" {ranked['stale_hidden']} older listings (over {f['stale_days']} days on market) do match -- they may already be rented; ask me to include them."
+            msg += f" {ranked['stale_hidden']} older backup listings ({f['stale_days']}-{f['backup_days']} days on market) do match; they may already be rented. Ask me to include them."
         lines.append(msg + " Otherwise try a higher budget, fewer bedrooms, or more areas.")
         return "\n".join(lines)
-    extra = f" ({ranked['stale_hidden']} older listings hidden)" if ranked.get("stale_hidden") else ""
+    extra = f" ({ranked['stale_hidden']} older backup listings hidden)" if ranked.get("stale_hidden") else ""
     lines.append(f"\n{ranked['count_matching']} listings match{extra}. Top picks:\n")
     for i, e in enumerate(evid, 1):
         c = e.get("commute") or {}
@@ -238,12 +245,15 @@ def compose_answer(query: str, ranked: dict, evid: List[dict], p: planner.Plan) 
                 cite = b["recent"][0]["record_id"] if b.get("recent") else None
                 sub.append(f"building: {b['records_window']} city records in last {b['window_years']} yrs ({top})" + (f" [R:{cite}]" if cite else ""))
             else:
-                sub.append(f"building: 0 city complaints/violations matched in last {b['window_years']} yrs")
+                if b.get("evidence") == "unmatched":
+                    sub.append("building: address not found in city data")
+                else:
+                    sub.append(f"building: no city records since {b.get('window_start', '')[:7]} (limited evidence, not proof of no problems)")
         else:
             sub.append("building record: no data (" + b.get("reason", "n/a") + ")")
         s = e.get("street") or {}
         if s.get("available"):
-            sub.append(f"street: {s['injury_crashes']} injury crashes, {s['ped_bike_crashes']} pedestrian/bike crashes within {s['radius_m']} m" + (f" ({s['years']})" if s.get("years") else ""))
+            sub.append(f"crash history: {s['injury_crashes']} injury crashes, {s['ped_bike_crashes']} pedestrian/bike crashes within {s['radius_m']} m" + (f" ({s['years']})" if s.get("years") else ""))
         o = e.get("owner") or {}
         if o.get("available"):
             occ = "owner-occupied" if o.get("owner_occupied") else "not owner-occupied" if o.get("owner_occupied") is False else "occupancy unknown"

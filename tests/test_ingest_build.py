@@ -1,4 +1,7 @@
 import json
+import re
+from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
@@ -7,14 +10,37 @@ from rentradar.ingest import SchemaError, resolve, rentsmart
 from rentradar.ingest import listings as listings_mod
 
 
-def test_listings_scope_dedupe_and_zip_correction():
-    rows = listings_mod.load([config.FIXTURE_DIR / "listings_fixture.json"])
+PULL = datetime(2026, 10, 27, tzinfo=timezone.utc)
+
+
+def test_listings_scope_tiers_and_funnel():
+    rows, funnel = listings_mod.load_snapshot([config.FIXTURE_DIR / "listings_fixture.json"], today=PULL)
     ids = {r["id"] for r in rows}
-    assert "FX-9" not in ids  # 02124 is outside v1 scope
+    assert "FX-9" not in ids   # 02124 is outside v1 scope
+    assert "FX-10" not in ids  # 400 days on market: dropped
     fx8 = next(r for r in rows if r["id"] == "FX-8")
     assert fx8["zip_corrected"] == 1 and fx8["area_zip"] in config.CAMBRIDGE_ZIPS
     fx3 = next(r for r in rows if r["id"] == "FX-3")
-    assert fx3["stale"] == 1  # 260 days on market
+    assert fx3["tier"] == "older" and fx3["stale"] == 1  # 150 days: kept as a backup
+    assert funnel["retrieved"] == 12 and funnel["dropped_outside_scope"] == 1
+    assert funnel["dropped_older_than_backup"] == 1 and funnel["kept"] == 10 == funnel["fresh"] + funnel["older"]
+
+
+def test_not_seen_recently_is_dropped(tmp_path):
+    p = tmp_path / "2026-11-10_02134.json"
+    p.write_text(json.dumps([{"id": "A", "status": "Active", "price": 2000, "latitude": 42.354, "longitude": -71.13,
+                              "zipCode": "02134", "city": "Boston", "addressLine1": "1 A St", "daysOnMarket": 10,
+                              "lastSeenDate": "2026-10-01T00:00:00Z"}]))
+    rows, funnel = listings_mod.load_snapshot([p], today=datetime(2026, 11, 10, tzinfo=timezone.utc))
+    assert rows == [] and funnel["dropped_not_seen_recently"] == 1
+
+
+def test_snapshot_grouping_uses_newest_dated_pull():
+    names = [Path("listings_Boston.json"), Path("2026-11-05_02134.json"), Path("2026-11-12_02134.json"),
+             Path("2026-11-12_02135.json")]
+    groups = listings_mod.group_snapshots(names)
+    assert groups[0][0] == "2026-11-12" and len(groups[0][1]) == 2
+    assert [g[0] for g in groups] == ["2026-11-12", "2026-11-05", "undated"]
 
 
 def test_resolve_aliases_and_error_message():
@@ -28,11 +54,37 @@ def test_resolve_aliases_and_error_message():
 
 def test_build_report(store):
     src = store.meta["sources"]
-    assert src["listings"]["rows"] == 8
+    assert src["listings"]["rows"] == 10
     assert src["rentsmart"]["rows"] == 10
     assert store.meta["fixtures"] is True
     link = src["linking"]
     assert link["zip_corrected"] == 1 and link["stale_listings"] == 1
+    cov = store.meta["coverage"]
+    assert cov["boston_listings"] == 7 and cov["with_city_records"] == 5
+    assert cov["no_records_found"] == 1 and cov["unmatched"] == 1 and cov["cambridge_listings_listing_only"] == 3
+
+
+def test_no_records_is_limited_evidence_not_reassurance(store):
+    from rentradar import summary
+    b11 = store.features["FX-11"]["building"]
+    assert b11["evidence"] == "no_records" and b11["records_window"] == 0
+    s = store.scorer.score(store.listings["FX-11"], store.features["FX-11"], "mit")
+    assert next(x for x in s["breakdown"] if x["factor"] == "building")["score"] == 90.0  # capped, never 100
+    fl = summary.flags(store.listings["FX-11"], store.features["FX-11"], "mit")
+    assert not any(f["kind"] == "good" and f["topic"] == "building" for f in fl)
+    assert any("not proof" in f["text"] for f in fl)
+    # address not in city data at all -> no building score
+    assert store.features["FX-12"]["building"]["evidence"] == "unmatched"
+    s12 = store.scorer.score(store.listings["FX-12"], store.features["FX-12"], "mit")
+    assert next(x for x in s12["breakdown"] if x["factor"] == "building").get("missing")
+
+
+def test_flags_never_call_a_street_safe(store):
+    from rentradar import summary
+    for lid in store.listings:
+        for f in summary.flags(store.listings[lid], store.features[lid], "mit"):
+            assert not (f["topic"] == "street" and f["kind"] == "good")
+            assert not re.search(r"\b(safe|unsafe|dangerous)\b", f["text"].lower())
 
 
 def test_building_match_exact_range_and_window(store):

@@ -29,6 +29,16 @@ SIGNAL_WORDS: Dict[str, tuple] = {
 CAMPUS_SHORT = {"mit": "MIT", "harvard": "Harvard Yard", "seas": "SEAS"}
 
 
+MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def month_year(iso) -> str:
+    try:
+        return f"{MONTHS[int(iso[5:7]) - 1]} {iso[:4]}"
+    except (TypeError, ValueError, IndexError):
+        return "the last 3 years"
+
+
 def words(signal: str, n: int) -> str:
     one, many = SIGNAL_WORDS.get(signal, ("record", "records"))
     return f"{n} {one if n == 1 else many}"
@@ -42,22 +52,28 @@ def flags(listing: dict, f: dict, campus: str = config.DEFAULT_CAMPUS) -> List[d
     out: List[dict] = []
     add = lambda kind, topic, text: out.append({"kind": kind, "topic": topic, "text": text})  # noqa: E731
 
-    # listing freshness first: a gone listing makes everything else moot
+    # listing freshness first: an older listing may already be gone
     dom = (f.get("listing") or {}).get("days_on_market")
     if (f.get("listing") or {}).get("stale"):
-        add("bad", "listing", f"Listed {dom} days ago, may be gone")
+        add("info", "listing", f"Listed {dom} days ago, check it is still available")
 
     b = f.get("building") or {}
+    since = month_year(b.get("window_start"))
     if b.get("available"):
         sig = b.get("by_signal") or {}
         bad = sorted(((s, n) for s, n in sig.items() if serious(s)), key=lambda t: -signals.SEVERITY[t[0]] * t[1])
         if bad:
-            add("bad", "building", ", ".join(words(s, n) for s, n in bad[:2]) + f" ({b['window_years']} yrs)")
+            add("bad", "building", ", ".join(words(s, n) for s, n in bad[:2]) + f" since {since}")
         elif b.get("records_window"):
             minor = sorted(sig.items(), key=lambda t: -t[1])[0]
-            add("info", "building", f"Only minor records: {words(*minor)}")
+            add("info", "building", f"Only minor records since {since}: {words(*minor)}")
+        elif b.get("evidence") == "unmatched":
+            add("info", "building", "Address not found in city data")
         else:
-            add("good", "building", f"No city complaints in {b['window_years']} yrs")
+            # feedback 11/4: absence of records is limited evidence, not reassurance
+            add("info", "building", f"No city records since {since} (not proof of no problems)")
+    elif (listing.get("city") or "").lower() == "cambridge":
+        add("info", "building", "Cambridge: listing only, no city records yet")
 
     o = f.get("owner") or {}
     if o.get("available"):
@@ -81,12 +97,10 @@ def flags(listing: dict, f: dict, campus: str = config.DEFAULT_CAMPUS) -> List[d
     if t.get("station") and t.get("station_walk_min") is not None and t["station_walk_min"] <= 10:
         add("good", "transit", f"{t['station']} T, {t['station_walk_min']} min walk")
 
+    # crash counts describe the street, not personal safety; only notable ones become a flag
     s = f.get("street") or {}
-    if s.get("available"):
-        if s["injury_crashes"] >= 5:
-            add("bad", "street", f"{s['injury_crashes']} injury crashes within {s['radius_m']} m")
-        elif s["injury_crashes"] == 0:
-            add("good", "street", "No injury crashes nearby")
+    if s.get("available") and s["injury_crashes"] >= 5:
+        add("bad", "street", f"{s['injury_crashes']} injury crashes within {s['radius_m']} m, {s.get('years') or '2021-2025'}")
     return out
 
 

@@ -15,6 +15,16 @@ Rent Radar is a rental map plus an AI neighborhood check for Harvard and MIT stu
 | #9 noise sources | Proxy for now: busiest road (AADT) within 100 m. A POI layer (police, fire stations, ERs) is planned for the final. |
 | #2, #3 Redfin / MLS | Not used. The terms of service and access requirements are documented in `docs/data-sources.md`. |
 
+### Proposal feedback received 11/4 and what changed
+
+| Feedback | Change |
+|---|---|
+| Boston layers and a clearly defined listing snapshot first | Search and map default to Boston. Cambridge is an opt-in "listing only" layer. The snapshot is the newest dated RentCast pull with stated rules (≤ 90 days shown, 91–180 kept as labeled backups, older or not recently seen dropped). |
+| Replace "100% of active listings" with measurable coverage | Snapshot funnel plus Boston coverage table (parcel match, owner, occupancy, records / no records / unmatched), shown under About the data and printed by the build. |
+| Complaints and crashes need geographic and time context, not personal safety | Every count carries its window and radius. The factor is called "Crash history", and no flag calls a street safe. |
+| No complaint records = limited evidence | Neutral note "no city records since …, not proof of no problems". Building score is capped at 90. Unmatched addresses get no building score. |
+| Show missing geographic coverage | Cambridge pins are hollow and labeled "LISTING ONLY", and the coverage table counts them. |
+
 ## 2. Technical uncertainties: what was tested
 
 | Risk (proposal slide 4) | Status | Evidence |
@@ -25,7 +35,7 @@ Rent Radar is a rental map plus an AI neighborhood check for Harvard and MIT stu
 | LLM inventing numbers | **Measured.** A grounding check runs on every answer, with one corrective retry. | `make eval` → `eval/results/` (offline: 20/20 pass, 0 made-up numbers) |
 | LLM unavailable during the demo (quota, wifi) | **Covered.** Automatic fallback to the offline planner over the same tools. | `tests/test_agent.py::test_llm_failure_falls_back_to_offline` |
 | Fair Housing | **Guardrail plus a design choice.** No demographic or crime data is stored. Steering requests are refused. "Safe" is defined in the UI. | `tests/test_agent.py::test_guardrail_blocks_steering`, eval cases A17–A19 |
-| Stale listings | **Found a real problem.** In the 10/27 RentCast pull, every Allston, Brighton and Fenway listing had been on the market 183 days or more (median about 248). Stale listings are faded, flagged and hidden from agent results unless the user asks. A per-zip refresh is the next step. | build report `stale_listings`; `area_overview` |
+| Stale listings | **Found a real problem.** In the 10/27 RentCast pull, 462 of 1,000 rows were listed more than 180 days earlier, and every Allston, Brighton and Fenway row was. Now: freshness tiers (≤ 90 shown, 91–180 backups, older dropped), newest snapshot only, and a "gone since last pull" count when two pulls exist. | snapshot funnel in the build report |
 
 ## 3. What works now
 

@@ -23,6 +23,8 @@
 - Boston listings with at least one matched RentSmart record
 - Boston listings with an owner of record
 - listings whose zip was corrected from coordinates (RentCast returned 02720 for some Cambridge rows)
-- stale listings (on the market more than 180 days)
+- the listing snapshot funnel: retrieved, dropped by each rule (inactive, outside scope, not seen recently, > 180 days), shown (≤ 90 days) and older backups (91–180 days)
+- coverage of Boston listings: matched to a parcel, owner found, occupancy known, with records, no records (limited evidence), unmatched
+- when an earlier snapshot exists: how many of its listings are gone in the new pull (likely rented)
 
-The header in the UI shows which layers loaded.
+The "About the data" dialog in the UI shows these tables.

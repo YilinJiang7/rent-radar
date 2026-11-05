@@ -71,20 +71,23 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
                   min_beds: Optional[float] = None, max_beds: Optional[float] = None,
                   areas: Optional[List[str]] = None, max_bike_min: Optional[float] = None,
                   include_stale: bool = False, weights: Optional[Dict[str, float]] = None,
-                  budget: Optional[float] = None, limit: int = 5) -> dict:
+                  budget: Optional[float] = None, limit: int = 5, include_cambridge: bool = False) -> dict:
     campus = campus if campus in config.CAMPUSES else config.DEFAULT_CAMPUS
+    # v1 scope: Boston (full evidence). Cambridge only when asked for by name or flag.
+    cities = None if (areas or include_cambridge) else config.DEFAULT_CITIES
     if areas:
         zips, unknown = resolve_areas(areas)
         if unknown:
             return {"error": f"unknown area(s) {unknown}. Use one of: " +
                     ", ".join(f"{v[0]} ({z})" for z, v in config.AREAS.items()) + ", or Boston / Cambridge."}
         areas = zips
-    rows = store.filter(max_price=max_price, min_beds=min_beds, max_beds=max_beds, areas=areas,
+    rows = store.filter(max_price=max_price, min_beds=min_beds, max_beds=max_beds, areas=areas, cities=cities,
                         campus=campus, max_bike_min=max_bike_min, include_stale=include_stale)
     stale_hidden = 0
     if not include_stale:
         stale_hidden = len(store.filter(max_price=max_price, min_beds=min_beds, max_beds=max_beds, areas=areas,
-                                        campus=campus, max_bike_min=max_bike_min, include_stale=True)) - len(rows)
+                                        cities=cities, campus=campus, max_bike_min=max_bike_min,
+                                        include_stale=True)) - len(rows)
     ranked = store.scored(rows, campus, weights, budget or max_price)
     limit = max(1, min(int(limit or 5), 20))
     w = dict(DEFAULT_WEIGHTS)
@@ -93,7 +96,8 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
         "campus": config.CAMPUSES[campus]["name"],
         "filters": {"max_price": max_price, "min_beds": min_beds, "max_beds": max_beds, "areas": areas,
                     "max_bike_min": max_bike_min, "include_stale": include_stale,
-                    "stale_days": config.STALE_DAYS},
+                    "cities": cities or "as areas", "stale_days": config.FRESH_DAYS,
+                    "backup_days": config.BACKUP_DAYS},
         "weights_used": w,
         "count_matching": len(rows),
         "stale_hidden": stale_hidden,
@@ -174,7 +178,8 @@ DECLARATIONS = [
                 "max_beds": {"type": "number"},
                 "areas": {"type": "array", "items": {"type": "string"}, "description": "Area names or zip codes, e.g. Allston, 02139"},
                 "max_bike_min": {"type": "number", "description": "Maximum estimated bike minutes to campus"},
-                "include_stale": {"type": "boolean", "description": "Include listings on market > 180 days (default false)"},
+                "include_stale": {"type": "boolean", "description": "Also include older backup listings (91-180 days on market; may be gone). Default false"},
+                "include_cambridge": {"type": "boolean", "description": "Include Cambridge listings (listing data only: no complaint or owner records yet). Default false = Boston only"},
                 "weights": WEIGHT_SCHEMA,
                 "limit": {"type": "integer", "description": "How many results (default 5, max 20)"},
             },

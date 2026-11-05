@@ -29,6 +29,7 @@ class Plan:
     areas: Optional[List[str]] = None
     max_bike_min: Optional[float] = None
     include_stale: bool = False
+    include_cambridge: bool = False
     weights: Dict[str, float] = field(default_factory=lambda: dict(DEFAULT_WEIGHTS))
     notes: List[str] = field(default_factory=list)
 
@@ -36,7 +37,7 @@ class Plan:
         return {k: v for k, v in {
             "campus": self.campus, "max_price": self.max_price, "min_beds": self.min_beds,
             "max_beds": self.max_beds, "areas": self.areas, "max_bike_min": self.max_bike_min,
-            "include_stale": self.include_stale, "weights": self.weights,
+            "include_stale": self.include_stale, "include_cambridge": self.include_cambridge, "weights": self.weights,
         }.items() if v is not None}
 
 
@@ -96,8 +97,10 @@ def parse(query: str, campus_hint: Optional[str] = None) -> Plan:
     if m and re.search(r"bike|biking|cycle|ride", q):
         p.max_bike_min = float(m.group(1))
 
-    if re.search(r"include (old|older|stale|all)|old listings|stale listings|all listings", q):
+    if re.search(r"include (old|older|stale|all)|old(er)? listings|stale listings|all listings|backup", q):
         p.include_stale = True
+    if re.search(r"\bcambridge\b", q) and not p.areas:
+        p.include_cambridge = True
 
     # preferences -> weights
     w = p.weights

@@ -69,7 +69,7 @@
    "listingType": "Standard",
    "listedDate": "2026-10-01T00:00:00.000Z",
    "lastSeenDate": "2026-10-27T00:00:00.000Z",
-   "daysOnMarket": 260
+   "daysOnMarket": 150
   },
   {
    "id": "FX-4",
@@ -196,6 +196,69 @@
    "listedDate": "2026-10-01T00:00:00.000Z",
    "lastSeenDate": "2026-10-27T00:00:00.000Z",
    "daysOnMarket": 10
+  },
+  {
+   "id": "FX-10",
+   "formattedAddress": "2 Ancient Way, Boston, MA 02134",
+   "addressLine1": "2 Ancient Way",
+   "addressLine2": null,
+   "city": "Boston",
+   "state": "MA",
+   "zipCode": "02134",
+   "latitude": 42.3545,
+   "longitude": -71.13,
+   "propertyType": "Apartment",
+   "bedrooms": 1,
+   "bathrooms": 1,
+   "squareFootage": 750,
+   "status": "Active",
+   "price": 1800,
+   "listingType": "Standard",
+   "listedDate": "2026-10-01T00:00:00.000Z",
+   "lastSeenDate": "2026-10-27T00:00:00.000Z",
+   "daysOnMarket": 400
+  },
+  {
+   "id": "FX-11",
+   "formattedAddress": "50 Quiet St, Apt 1, Boston, MA 02134",
+   "addressLine1": "50 Quiet St",
+   "addressLine2": "Apt 1",
+   "city": "Boston",
+   "state": "MA",
+   "zipCode": "02134",
+   "latitude": 42.356,
+   "longitude": -71.125,
+   "propertyType": "Apartment",
+   "bedrooms": 1,
+   "bathrooms": 1,
+   "squareFootage": 750,
+   "status": "Active",
+   "price": 2300,
+   "listingType": "Standard",
+   "listedDate": "2026-10-01T00:00:00.000Z",
+   "lastSeenDate": "2026-10-27T00:00:00.000Z",
+   "daysOnMarket": 20
+  },
+  {
+   "id": "FX-12",
+   "formattedAddress": "9 Nowhere Ln, Boston, MA 02135",
+   "addressLine1": "9 Nowhere Ln",
+   "addressLine2": null,
+   "city": "Boston",
+   "state": "MA",
+   "zipCode": "02135",
+   "latitude": 42.347,
+   "longitude": -71.165,
+   "propertyType": "Apartment",
+   "bedrooms": 1,
+   "bathrooms": 1,
+   "squareFootage": 750,
+   "status": "Active",
+   "price": 2250,
+   "listingType": "Standard",
+   "listedDate": "2026-10-01T00:00:00.000Z",
+   "lastSeenDate": "2026-10-27T00:00:00.000Z",
+   "daysOnMarket": 15
   }
  ]
 }

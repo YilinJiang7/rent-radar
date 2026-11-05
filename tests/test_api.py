@@ -19,7 +19,8 @@ def client(fixture_db):
 
 def test_meta(client):
     m = client.get("/api/meta").json()
-    assert m["listing_count"] == 8 and m["llm"] is None
+    assert m["listing_count"] == 10 and m["llm"] is None
+    assert m["build"]["coverage"]["boston_listings"] == 7
     assert set(m["campuses"]) == {"mit", "harvard", "seas"}
 
 

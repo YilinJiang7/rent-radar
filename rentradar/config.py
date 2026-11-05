@@ -48,7 +48,13 @@ STATION_SEARCH_M = 1600       # search radius for nearest rapid-transit station
 BUS_STOP_RADIUS_M = 400
 GEO_MATCH_M = 20              # coordinate fallback when address match fails
 BUILDING_RECORD_YEARS = 3     # building record window for scoring
-STALE_DAYS = 180              # listings older than this are flagged
+# Listing freshness tiers (days on market). RentCast keeps a listing "Active"
+# while some source still shows it, so old listings are often already rented.
+FRESH_DAYS = 90               # shown by default
+BACKUP_DAYS = 180             # 91-180: kept as "older" backups, hidden by default; >180 dropped
+NOT_SEEN_DAYS = 14            # dropped if RentCast has not seen it active for this long
+STALE_DAYS = FRESH_DAYS       # older name kept for compatibility: "stale" = older than FRESH_DAYS
+DEFAULT_CITIES = ["Boston"]   # v1 scope per feedback: Boston layers first; Cambridge = listings only
 
 # Commute speed assumptions (documented in README). Detour factor turns a
 # straight line into a rough street distance.
@@ -57,5 +63,7 @@ WALK_M_PER_MIN = 80           # ~4.8 km/h
 BIKE_M_PER_MIN = 250          # ~15 km/h
 
 # --- LLM ----------------------------------------------------------------------
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+# gemini-2.5-flash returns 404 for new users (Nov 2026); override in .env if needed
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_FALLBACK_MODELS = os.getenv("GEMINI_FALLBACK_MODELS", "gemini-3.1-flash-lite")
 AGENT_MAX_STEPS = int(os.getenv("AGENT_MAX_STEPS", "8"))

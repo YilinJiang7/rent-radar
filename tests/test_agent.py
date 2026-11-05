@@ -1,3 +1,5 @@
+import pytest
+
 from rentradar import guardrails
 from rentradar.agent import grounding, planner, tools
 from rentradar.agent.agent import Agent
@@ -43,14 +45,19 @@ def test_guardrail_blocks_steering():
 
 
 # ---------- tools ----------
-def test_rank_listings_respects_filters_and_hides_stale(store):
-    out = tools.rank_listings(store, campus="mit", max_price=3000)
+def test_rank_listings_respects_filters_hides_older_and_defaults_to_boston(store):
+    out = tools.rank_listings(store, campus="mit", max_price=3000, limit=20)
     assert out["count_matching"] > 0
     assert all(r["price"] <= 3000 for r in out["results"])
-    assert "FX-3" not in {r["id"] for r in out["results"]}  # stale
+    assert "FX-3" not in {r["id"] for r in out["results"]}  # older backup listing
     assert out["stale_hidden"] == 1
-    allx = tools.rank_listings(store, campus="mit", max_price=3000, include_stale=True)
+    assert all(store.listings[r["id"]]["city"] == "Boston" for r in out["results"])  # Boston-first scope
+    allx = tools.rank_listings(store, campus="mit", max_price=3000, include_stale=True, limit=20)
     assert "FX-3" in {r["id"] for r in allx["results"]}
+    cam = tools.rank_listings(store, campus="mit", include_cambridge=True, limit=20)
+    assert any(store.listings[r["id"]]["city"] == "Cambridge" for r in cam["results"])
+    named = tools.rank_listings(store, campus="mit", areas=["Central Square"], limit=20)
+    assert named["count_matching"] == 1  # naming a Cambridge area includes it
 
 
 def test_tool_call_wrapper_handles_bad_input(store):
@@ -72,7 +79,7 @@ def test_offline_agent_is_grounded_and_cites(store):
 
 def test_offline_agent_no_match_mentions_stale(store):
     r = Agent(store, use_llm=False).run("1 bed in Brighton under 2200")
-    assert r["count_matching"] == 0 and "older listings" in r["answer"]
+    assert r["count_matching"] == 0 and "older backup listings" in r["answer"]
 
 
 def test_agent_guardrail_short_circuits(store):
@@ -151,3 +158,47 @@ def test_last_step_forces_answer_without_tools(store, monkeypatch):
     m = ScriptedModel([{"call": "area_overview"}, {"call": "explain_factors"}, {"text": "Done."}])
     r = Agent(store, model=m).run("overview")
     assert m.forced == [False, False, True] and r["answer"] == "Done."
+
+
+def test_gemini_retries_then_switches_model():
+    import httpx
+    from rentradar.agent.llm import GeminiModel
+    seen = []
+
+    def handler(request):
+        model = request.url.path.split("/models/")[1].split(":")[0]
+        seen.append(model)
+        if model == "main-model":
+            return httpx.Response(503, json={"error": {"message": "high demand"}})
+        return httpx.Response(200, json={"candidates": [{"content": {"role": "model", "parts": [{"text": "ok"}]}}]})
+
+    m = GeminiModel(api_key="test", model="main-model", fallbacks=["backup-model"],
+                    client=httpx.Client(transport=httpx.MockTransport(handler)), retries=2, sleep=lambda s: None)
+    out = m.generate("sys", [{"role": "user", "parts": [{"text": "hi"}]}], [])
+    assert out["parts"][0]["text"] == "ok"
+    assert seen == ["main-model"] * 3 + ["backup-model"]
+    assert m.name == "gemini:backup-model" and m.usage["model_switches"] == 1
+
+
+def test_gemini_non_retryable_error_raises_immediately():
+    import httpx
+    from rentradar.agent.llm import GeminiModel
+    calls = []
+    m = GeminiModel(api_key="test", model="x", fallbacks=[], retries=2, sleep=lambda s: None,
+                    client=httpx.Client(transport=httpx.MockTransport(lambda r: calls.append(1) or httpx.Response(404, text="gone"))))
+    with pytest.raises(LLMError):
+        m.generate("s", [], [])
+    assert len(calls) == 1
+
+
+def test_eval_marks_llm_fallback_as_failure(store):
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("run_eval", Path(__file__).resolve().parent.parent / "eval" / "run_eval.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    case = {"id": "X", "query": "q", "expect": {}}
+    r = {"mode": "offline", "grounding": {"ok": True, "ungrounded": []}, "ranked": [], "answer": "",
+         "fallback_reason": "Gemini HTTP 404"}
+    assert m.check_case(case, r, store, expect_llm=True)["pass"] is False
+    assert m.check_case(case, r, store, expect_llm=False)["pass"] is True

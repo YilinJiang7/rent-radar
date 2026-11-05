@@ -30,7 +30,7 @@ make fixtures
 RENTRADAR_DB=data/fixtures.sqlite make run      # open http://127.0.0.1:8000
 
 # B) real data
-python scripts/fetch_rentcast.py --import-snapshot <folder with listings_*.json>   # or a fresh pull (uses RentCast quota)
+python scripts/fetch_rentcast.py   # fresh pull, one request per zip (~8-12 of the 50/month free requests)
 make data                        # RentSmart + Property Assessment + MBTA stops (public, no key)
 make build                       # -> data/rentradar.sqlite, prints a coverage report
 make run                         # http://127.0.0.1:8000
@@ -49,7 +49,7 @@ If you don't have the `make` command, each target is a one-line command listed i
 
 1. Go to <https://aistudio.google.com>, open **Get API key**, then **Create API key**. The free tier is enough.
 2. Put the key in `.env` as `GEMINI_API_KEY=...`. The `.env` file is git-ignored.
-3. Restart `make run`. The header will show `AI: gemini:gemini-2.5-flash`.
+3. Restart `make run`. About the data will show `AI: gemini:gemini-3.8-flash`. (`gemini-2.5-flash` returns 404 for new users.) If the model is overloaded (429/503), the client retries with backoff, then tries `GEMINI_FALLBACK_MODELS` (default `gemini-3.1-flash-lite`), and only then falls back to offline mode.
 
 Without a key, or if a Gemini call fails (rate limit, no network), the agent switches to **offline mode**. Offline mode uses a rule-based request parser over the same tools, so the demo always works.
 
@@ -59,7 +59,7 @@ Without a key, or if a Gemini call fails (rate limit, no network), the agent swi
 
 | Layer | Source | What the user sees |
 |---|---|---|
-| Listings | RentCast API (active long-term rentals) | Pins colored by score. Listings on the market more than 180 days are faded and flagged as possibly stale. |
+| Listings | RentCast API (active long-term rentals), newest snapshot only | Listed ≤ 90 days ago: shown. 91–180 days: "older backups", hidden by default and labeled. More than 180 days, or not seen active by RentCast in the 14 days before the pull: dropped. Every rule's count is in the snapshot funnel under About the data. |
 | Building record | RentSmart Boston (311 + Inspectional Services) | Complaints and violations matched to the address, each with a renter signal (heat, pests, mold, safety, ...) and a record ID |
 | Owner of record | Boston Property Assessment | Owner, whether owner-occupied, out-of-state mailing address, number of Boston properties, serious records across all of them |
 | Street safety | MassDOT crashes 2021–2025 (from PSet1) | Injury, pedestrian/bike and after-dark crashes within 150 m |
@@ -67,7 +67,11 @@ Without a key, or if a Gemini call fails (rate limit, no network), the agent swi
 | Transit | MBTA GTFS | Nearest subway or Green Line station and its lines; bus stops within 400 m |
 | Traffic noise | Road traffic volume (AADT) on nearby crash records | Busiest road within 100 m |
 
-Owner and RentSmart data cover **Boston only** for now. Cambridge publishes these on a separate portal (planned for the final). Factors without data are **left out of the score and labeled "no data"**. They are never guessed, and the card shows what share of the weights the score is based on.
+**Scope: Boston first.** Owner and RentSmart data cover Boston only, so search and the map default to Boston (Allston, Brighton, Fenway). Cambridge listings can be switched on and are shown hollow and labeled "listing only". Factors without data are **left out of the score and labeled "n/a"**. They are never guessed, and the card shows what share of the weights the score is based on.
+
+**No records is not reassurance.** A Boston address with no complaints or violations gets a neutral note ("no city records since …, not proof of no problems") and a building score of at most 90. An address that cannot be matched to city data at all gets no building score. Every count is shown with its window and radius (for example "within 150 m, 2021-2025"). Crash counts describe traffic on the street, not anyone's personal safety.
+
+**Coverage, not "100% of listings".** RentCast is one provider's sample, not the rental market. The build reports what the pipeline could retrieve and validate: the snapshot funnel (retrieved → in scope → seen recently → ≤ 180 days → shown / backups) and, for Boston listings, the share matched to a city parcel, with an owner of record, with records, with no records, and unmatched. Both tables appear under About the data.
 
 ### Where the AI is
 
@@ -146,7 +150,7 @@ docs/           architecture, data sources, midpoint report, proposal
 
 ## Limitations (honest list)
 
-- **Listings go stale.** In the 2026-10-27 RentCast pull, every Allston, Brighton and Fenway listing had been on the market 183 days or more. Stale listings are kept but faded and flagged, and the agent hides them unless asked.
+- **Listings go stale.** RentCast keeps a listing "Active" while any source still shows it. In the 2026-10-27 pull, 462 of 1,000 rows were listed more than 180 days earlier, and every Allston, Brighton and Fenway row was older than 180 days. Hence the freshness tiers above, a fresh per-zip pull, and the comparison between consecutive pulls ("gone since the last pull").
 - Commute times are straight-line estimates, not routed. MBTA trip planning is planned for the final.
 - RentSmart and owner layers cover Boston only. The Cambridge equivalents are planned.
 - The owner of record can differ from the person advertising the listing. The app shows both and tells the student to verify before paying anything. It does not detect fraud.
@@ -161,5 +165,5 @@ docs/           architecture, data sources, midpoint report, proposal
 ## External resources and AI assistance
 
 - Libraries: FastAPI, Uvicorn, httpx, python-dotenv, pytest, Leaflet.
-- Model: Google Gemini (`gemini-2.5-flash` by default) through the Gemini API.
+- Model: Google Gemini (`gemini-3.8-flash` by default, `gemini-3.1-flash-lite` as backup) through the Gemini API.
 - AI tools: **Claude (Anthropic)** drafted most of the modules, tests and docs in this repo, working from the author's proposal, design decisions and instructor feedback. The project idea, scope and data choices are the author's. Per course policy, the author is responsible for reviewing and running the code and for being able to explain all of it.

@@ -37,13 +37,16 @@ def listing(i, line1, unit, city, zip_, lat, lon, price, beds, baths, dom, agent
 LISTINGS = [
     listing(1, "12 Example St", "Apt 2", "Boston", "02134", 42.3535, -71.1320, 2400, 1, 1, 12, "A. Agent"),
     listing(2, "40-42 Sample Ave", "Unit 3", "Boston", "02134", 42.3550, -71.1290, 2900, 2, 1, 30),
-    listing(3, "7 Fixture Rd", None, "Boston", "02135", 42.3490, -71.1560, 2100, 1, 1, 260),
+    listing(3, "7 Fixture Rd", None, "Boston", "02135", 42.3490, -71.1560, 2100, 1, 1, 150),  # "older" tier
     listing(4, "88 Testing Ter", "# 5", "Boston", "02215", 42.3470, -71.1000, 3300, 2, 1, 5),
     listing(5, "3 Placeholder Pl", "Apt 1", "Boston", "02135", 42.3500, -71.1500, 1950, 0, 1, 45),
     listing(6, "200 Mock Street", "Apt 4", "Cambridge", "02139", 42.3640, -71.1030, 3100, 1, 1, 8),
     listing(7, "15 Demo Way", None, "Cambridge", "02138", 42.3790, -71.1230, 3600, 2, 1, 20),
     listing(8, "151 N Sample St", "# 727", "Cambridge", "02720", 42.3720, -71.0760, 3161, 0, 1, 2),  # wrong zip on purpose
     listing(9, "1 Faraway Ln", None, "Boston", "02124", 42.29, -71.07, 2000, 1, 1, 10),  # outside scope
+    listing(10, "2 Ancient Way", None, "Boston", "02134", 42.3545, -71.1300, 1800, 1, 1, 400),  # dropped: > 180 days
+    listing(11, "50 Quiet St", "Apt 1", "Boston", "02134", 42.3560, -71.1250, 2300, 1, 1, 20),  # in parcels, no records
+    listing(12, "9 Nowhere Ln", None, "Boston", "02135", 42.3470, -71.1650, 2250, 1, 1, 15),  # not in city data
 ]
 
 RENTSMART = [
@@ -68,6 +71,7 @@ ASSESSMENT = [
     ("P3", "7", "", "FIXTURE RD", "", "02135", "EXAMPLE HOLDINGS LLC", "N", "WILMINGTON", "DE", "SINGLE FAM DWELLING", "1950", "1"),
     ("P9", "99", "", "OTHER ST", "", "02135", "EXAMPLE HOLDINGS LLC", "N", "WILMINGTON", "DE", "THREE-FAM DWELLING", "1900", "3"),
     ("4", "88", "", "TESTING TER", "5", "02215", "SMITH JOHN", "N", "BOSTON", "MA", "CONDO UNIT", "1999", "1"),
+    ("0000000050", "50", "", "QUIET ST", "", "02134", "QUIET OWNER", "N", "BOSTON", "MA", "TWO-FAM DWELLING", "1915", "2"),
     ("0000000005", "3", "", "PLACEHOLDER PL", "", "02135", "PLACE OWNER", "Y", "BOSTON", "MA", "TWO-FAM DWELLING", "1920", "2"),
 ]
 

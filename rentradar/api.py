@@ -77,11 +77,12 @@ def meta():
 @app.get("/api/listings")
 def listings(campus: str = config.DEFAULT_CAMPUS, weights: Optional[str] = None,
              max_price: Optional[float] = None, min_beds: Optional[float] = None,
-             max_beds: Optional[float] = None, include_stale: bool = True,
+             max_beds: Optional[float] = None, include_stale: bool = False, cambridge: bool = False,
              area: Optional[str] = Query(None, description="comma-separated area names or zips")):
     s = get_store()
     rows = s.filter(max_price=max_price, min_beds=min_beds, max_beds=max_beds,
-                    areas=area.split(",") if area else None, include_stale=include_stale)
+                    areas=area.split(",") if area else None, include_stale=include_stale,
+                    cities=None if cambridge else config.DEFAULT_CITIES)
     ranked = s.scored(rows, campus, _weights(weights), max_price)
     out = []
     for r in ranked:
@@ -90,7 +91,7 @@ def listings(campus: str = config.DEFAULT_CAMPUS, weights: Optional[str] = None,
         out.append({
             "id": l["id"], "address": l["address"], "area": l["area"], "city": l["city"],
             "lat": l["lat"], "lon": l["lon"], "price": l["price"], "bedrooms": l["bedrooms"],
-            "bathrooms": l["bathrooms"], "days_on_market": l["days_on_market"], "stale": bool(l["stale"]),
+            "bathrooms": l["bathrooms"], "days_on_market": l["days_on_market"], "stale": bool(l["stale"]), "tier": l.get("tier"),
             "score": sc["total"], "coverage": sc["weight_coverage_pct"],
             "bike_min": (f["commute"].get(campus) or {}).get("bike_min"),
             "records_3y": (f.get("building") or {}).get("records_window"),

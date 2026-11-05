@@ -1,13 +1,16 @@
 # Rent Radar -- common commands. Uses .venv/bin/python if present.
 PY ?= $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python3)
 
-.PHONY: setup fixtures data build run run-offline test eval eval-offline classify
+.PHONY: setup fixtures listings data build run run-offline test eval eval-offline classify
 
 setup:            ## create .venv and install dependencies
 	python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt
 
 fixtures:         ## build the synthetic fixture DB (no downloads needed)
 	$(PY) -m rentradar.build --fixtures
+
+listings:         ## fresh RentCast pull, one request per zip (asks for the key unless RENTCAST_API_KEY is in .env)
+	$(PY) scripts/fetch_rentcast.py
 
 data:             ## download RentSmart, Property Assessment, MBTA stops (run on your Mac)
 	$(PY) scripts/fetch_data.py

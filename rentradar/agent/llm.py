@@ -34,15 +34,40 @@ class ChatModel(Protocol):
         """Return the model `content` dict: {"role": "model", "parts": [...]}"""
 
 
+RETRYABLE = {429, 500, 502, 503, 504}
+
+
 class GeminiModel:
-    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None, timeout: float = 60.0):
+    """Gemini over REST, with retry/backoff on overload (429/5xx) and backup models.
+
+    GEMINI_MODEL is tried first; GEMINI_FALLBACK_MODELS (comma-separated) are used
+    when it stays overloaded. Only if all fail does the agent drop to offline mode.
+    """
+
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None, timeout: float = 60.0,
+                 fallbacks: Optional[List[str]] = None, client: Optional[httpx.Client] = None,
+                 retries: int = 2, sleep=None):
+        import time
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             raise LLMError("GEMINI_API_KEY is not set")
-        self.model = model or config.GEMINI_MODEL
-        self.name = f"gemini:{self.model}"
-        self.client = httpx.Client(timeout=timeout)
-        self.usage = {"prompt_tokens": 0, "output_tokens": 0, "calls": 0}
+        primary = model or config.GEMINI_MODEL
+        if fallbacks is None:
+            fallbacks = [m.strip() for m in config.GEMINI_FALLBACK_MODELS.split(",") if m.strip()]
+        self.models = [primary] + [m for m in fallbacks if m != primary]
+        self.idx = 0
+        self.client = client or httpx.Client(timeout=timeout)
+        self.retries = retries
+        self.sleep = sleep or time.sleep
+        self.usage = {"prompt_tokens": 0, "output_tokens": 0, "calls": 0, "retries": 0, "model_switches": 0}
+
+    @property
+    def model(self) -> str:
+        return self.models[self.idx]
+
+    @property
+    def name(self) -> str:
+        return f"gemini:{self.model}"
 
     def generate(self, system: str, contents: List[dict], tools: List[dict], force_text: bool = False) -> dict:
         body = {
@@ -54,10 +79,35 @@ class GeminiModel:
             body["tools"] = [{"functionDeclarations": tools}]
             if force_text:  # keep declarations (history has calls) but forbid new ones
                 body["toolConfig"] = {"functionCallingConfig": {"mode": "NONE"}}
-        r = self.client.post(API_URL.format(model=self.model), json=body,
-                             headers={"x-goog-api-key": self.api_key, "Content-Type": "application/json"})
-        if r.status_code != 200:
-            raise LLMError(f"Gemini HTTP {r.status_code}: {r.text[:300]}")
+        last = None
+        while True:
+            for attempt in range(self.retries + 1):
+                try:
+                    r = self.client.post(API_URL.format(model=self.model), json=body,
+                                         headers={"x-goog-api-key": self.api_key, "Content-Type": "application/json"})
+                except httpx.HTTPError as e:  # network hiccup: treat like an overload
+                    last = f"network error: {e}"
+                    r = None
+                if r is not None and r.status_code == 200:
+                    break
+                if r is not None and r.status_code not in RETRYABLE:
+                    raise LLMError(f"Gemini HTTP {r.status_code} ({self.model}): {r.text[:300]}")
+                if r is not None:
+                    last = f"Gemini HTTP {r.status_code} ({self.model}): {r.text[:200]}"
+                if attempt < self.retries:
+                    self.usage["retries"] += 1
+                    wait = 1.5 * (2 ** attempt)
+                    if r is not None and r.headers.get("retry-after", "").isdigit():
+                        wait = min(10.0, float(r.headers["retry-after"]))
+                    self.sleep(wait)
+            else:
+                # still overloaded: move to the next model, if any
+                if self.idx + 1 < len(self.models):
+                    self.idx += 1
+                    self.usage["model_switches"] += 1
+                    continue
+                raise LLMError(last or "Gemini unavailable")
+            break
         data = r.json()
         um = data.get("usageMetadata") or {}
         self.usage["prompt_tokens"] += um.get("promptTokenCount", 0)

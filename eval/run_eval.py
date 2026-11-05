@@ -28,7 +28,7 @@ from rentradar.agent.agent import Agent  # noqa: E402
 from rentradar.store import Store  # noqa: E402
 
 
-def check_case(case: dict, r: dict, store: Store) -> dict:
+def check_case(case: dict, r: dict, store: Store, expect_llm: bool = False) -> dict:
     e = case["expect"]
     res = {"id": case["id"], "mode": r["mode"], "grounded": r["grounding"]["ok"],
            "ungrounded": r["grounding"]["ungrounded"], "n_results": len(r.get("ranked") or [])}
@@ -48,7 +48,12 @@ def check_case(case: dict, r: dict, store: Store) -> dict:
         res["guardrail_ok"] = r["mode"] == "guardrail"
     if e.get("safety_note"):
         res["safety_note_ok"] = guardrails.SAFETY_NOTE in r["answer"]
-    res["pass"] = res["grounded"] and res["constraints_ok"] and res.get("guardrail_ok", True) and res.get("safety_note_ok", True)
+    # an LLM run that silently fell back to offline mode is a failure of the LLM eval, not a pass
+    if expect_llm and r["mode"] == "offline":
+        res["llm_ok"] = False
+        res["fallback_reason"] = (r.get("fallback_reason") or "")[:160]
+    res["pass"] = (res["grounded"] and res["constraints_ok"] and res.get("guardrail_ok", True)
+                   and res.get("safety_note_ok", True) and res.get("llm_ok", True))
     return res
 
 
@@ -68,24 +73,29 @@ def main(argv=None):
     rows, raw = [], []
     for c in cases:
         r = agent.run(c["query"])
-        chk = check_case(c, r, store)
+        chk = check_case(c, r, store, expect_llm=agent.model is not None)
         rows.append(chk)
         raw.append({"case": c, "check": chk, "answer": r["answer"], "tool_trace": r.get("tool_trace"),
                     "fallback_reason": r.get("fallback_reason"), "seconds": r.get("seconds")})
         print(f"{c['id']}  {'PASS' if chk['pass'] else 'FAIL'}  mode={chk['mode']:<9} results={chk['n_results']:<2} "
-              f"ungrounded={chk['ungrounded']} {chk['constraint_violations'] or ''}")
-    mode = "llm" if agent.model else "offline"
+              f"ungrounded={chk['ungrounded']} {chk['constraint_violations'] or ''}"
+              + (f"  FALLBACK: {chk['fallback_reason'][:90]}" if chk.get("fallback_reason") else ""))
+    fallbacks = sum(1 for x in raw if x["fallback_reason"])
+    mode = "offline" if not agent.model else ("llm" if not fallbacks else "llm-with-fallbacks")
     summary = {
         "date": date.today().isoformat(), "mode": mode, "model": getattr(agent.model, "name", None),
+        "models_tried": getattr(agent.model, "models", None),
         "db_as_of": store.meta.get("as_of"), "cases": len(rows),
         "passed": sum(r["pass"] for r in rows),
         "made_up_numbers_total": sum(len(r["ungrounded"]) for r in rows),
         "constraint_violations_total": sum(len(r["constraint_violations"]) for r in rows),
         "guardrail_cases_ok": sum(1 for r in rows if r.get("guardrail_ok")),
-        "llm_fallbacks": sum(1 for x in raw if x["fallback_reason"]),
+        "llm_fallbacks": fallbacks,
+        "llm_answered": sum(1 for r in rows if r["mode"] == "llm"),
+        "snapshot": (store.meta.get("snapshot") or {}).get("date"),
         "usage": getattr(agent.model, "usage", None),
     }
-    out = ROOT / "eval" / "results" / f"agent_{mode}_{summary['date']}.json"
+    out = ROOT / "eval" / "results" / f"agent_{'offline' if mode == 'offline' else 'llm'}_{summary['date']}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"summary": summary, "results": raw}, indent=1, default=str))
     print("\n" + json.dumps(summary, indent=1))

@@ -55,6 +55,7 @@ class EvidenceIndex:
         self.rapid = GridIndex(((s["lat"], s["lon"], s) for s in stations if s["kind"] == "rapid_transit"), 400)
         self.bus = GridIndex(((s["lat"], s["lon"], s) for s in stations if s["kind"] == "bus"), 200)
         self.has_records = bool(records)
+        self.records_through = max((r.get("date") or "" for r in records), default=None)
         self.has_parcels = bool(parcels)
         self.has_crashes = bool(crashes)
         self.has_stations = bool(stations)
@@ -100,16 +101,26 @@ class EvidenceIndex:
             return {"available": False, "reason": "RentSmart covers Boston only" if not covered else "RentSmart not loaded"}
         if not matches and not listing.get("street_key"):
             return {"available": False, "reason": "Listing address could not be parsed for matching"}
-        cutoff = self.today.year - config.BUILDING_RECORD_YEARS
+        start = self.window_start()
         recs = [r for r, _m in matches if r["building_level"]]
-        window = [r for r in recs if (r.get("year") or 0) > cutoff]
+        window = [r for r in recs if (r.get("date") or "") >= start]
         by_signal = Counter(r["signal"] for r in window)
         # diminishing returns per signal: 158 trash tickets must not outweigh 3 rodent complaints
         weighted = round(sum(signals.SEVERITY.get(s, 0.5) * (1 + math.log(n)) for s, n in by_signal.items()), 2)
         recent = sorted(recs, key=lambda r: r.get("date") or "", reverse=True)[:8]
         mtypes = Counter(m for _r, m in matches)
+        # Feedback 11/4: no records is *limited evidence*, not reassurance. Say which case it is.
+        if matches:
+            evidence = "records"
+        elif self.parcels_for(listing):
+            evidence = "no_records"   # the city knows this address, no complaint/violation filed
+        else:
+            evidence = "unmatched"    # we could not tie the address to city data at all
         return {
             "available": True,
+            "evidence": evidence,
+            "window_start": start,
+            "data_through": self.records_through,
             "match_type": mtypes.most_common(1)[0][0] if mtypes else "none",
             "records_total": len(recs),
             "window_years": config.BUILDING_RECORD_YEARS,
@@ -121,6 +132,10 @@ class EvidenceIndex:
                 for r in recent
             ],
         }
+
+    def window_start(self) -> str:
+        from datetime import timedelta
+        return (self.today - timedelta(days=365 * config.BUILDING_RECORD_YEARS)).isoformat()
 
     # -- owner of record -------------------------------------------------------
     def owner(self, listing: dict, matches: List[tuple]) -> dict:
@@ -138,8 +153,8 @@ class EvidenceIndex:
         top_parcels = [p for p in parcels if p.get("owner") == top]
         portfolio = self.parcels_by_owner.get(top, [])
         addrs = {(p["street_key"], p["num_lo"]) for p in portfolio}
-        cutoff = self.today.year - config.BUILDING_RECORD_YEARS
-        p_recs = [r for r in self.rec_by_owner.get(top, []) if r["building_level"] and (r.get("year") or 0) > cutoff]
+        start = self.window_start()
+        p_recs = [r for r in self.rec_by_owner.get(top, []) if r["building_level"] and (r.get("date") or "") >= start]
         serious = [r for r in p_recs if signals.SEVERITY.get(r["signal"], 0) >= 2.5]
         mail_state = top_parcels[0].get("mail_state") if top_parcels else None
         occ_vals = [p.get("owner_occupied") for p in top_parcels if p.get("owner_occupied") is not None]
