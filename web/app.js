@@ -95,20 +95,33 @@ function cardHTML(l) {
   return `<li class="card" data-id="${esc(l.id)}">
     <div class="badge" style="background:${scoreColor(l.score)}">${l.score == null ? "–" : Math.round(l.score)}</div>
     <div>
-      <div class="street">${esc(street(l.address))}${l.stale ? '<span class="old">OLDER</span>' : ""}${l.city === "Cambridge" ? '<span class="old">LISTING ONLY</span>' : ""}</div>
+      <div class="street">${esc(street(l.address))}${l.units > 1 ? `<span class="units">+${l.units - 1} more unit${l.units > 2 ? "s" : ""}</span>` : ""}${l.stale ? '<span class="old">OLDER</span>' : ""}${l.city === "Cambridge" ? '<span class="old">LISTING ONLY</span>' : ""}</div>
       <div class="sub">${esc(l.area)} · ${money(l.price)} · ${beds(l.bedrooms)}</div>
       <ul class="flags">${flags}</ul>
     </div></li>`;
 }
 
+const bkey = (l) => `${street(l.address).toLowerCase().replace(/[^a-z0-9]/g, "")}|${l.area}`;
+
+/* one card per building: the best-scoring unit, plus a count of the others */
+function groupByBuilding(rows) {
+  const seen = new Map();
+  for (const l of rows) {
+    const k = bkey(l);
+    if (seen.has(k)) seen.get(k).units += 1;
+    else seen.set(k, { ...l, units: 1 });
+  }
+  return [...seen.values()];
+}
+
 function renderCards() {
   let rows;
   if (state.agentIds) {
-    rows = state.agentIds.map((id) => state.byId.get(id)).filter(Boolean);
+    rows = groupByBuilding(state.agentIds.map((id) => state.byId.get(id)).filter(Boolean));
     $("listTitle").innerHTML = `Agent’s picks <small>${rows.length}</small>`;
   } else {
-    rows = state.listings;
-    $("listTitle").innerHTML = `Best matches <small>${rows.length} listings</small>`;
+    rows = groupByBuilding(state.listings);
+    $("listTitle").innerHTML = `Best matches <small>${state.listings.length} listings in ${rows.length} buildings</small>`;
   }
   const shown = state.agentIds ? rows : rows.slice(0, state.shown);
   $("cards").innerHTML = shown.map(cardHTML).join("") +
@@ -184,8 +197,8 @@ async function openDetail(id) {
   // why this score
   const factors = e.score.breakdown.map((f) => `<div class="factor" title="${esc(state.meta.factors[f.factor].how)}">
       <span>${esc(f.label)}</span><div class="bar"><i style="width:${f.score ?? 0}%;background:${scoreColor(f.score)}"></i></div>
-      <span class="${f.missing ? "muted" : ""}">${f.missing ? "n/a" : Math.round(f.score)}</span></div>`).join("");
-  h += sec("Why this score", null, factors + `<div class="note">Based on ${e.score.weight_coverage_pct}% of your weights; “n/a” factors have no data here and are left out. Hover a row for its formula.</div>`);
+      <span class="${f.missing ? "muted" : f.neutral ? "neutral" : ""}">${f.missing ? "n/a" : f.neutral ? "50 unknown" : Math.round(f.score)}</span></div>`).join("");
+  h += sec("Why this score", null, factors + `<div class="note">Based on ${e.score.weight_coverage_pct}% of your weights. “unknown” = the city has no entry for this address, scored as average (50) so missing data is never a bonus; “n/a” = factor not available here and left out. Hover a row for its formula.</div>`);
 
   // building
   if (!b.available) h += sec("Building record", null, `<div class="note">${esc(b.reason)}</div>`);

@@ -123,10 +123,12 @@ main { display: grid; grid-template-columns: 400px 1fr; height: calc(100% - 56px
 .sec[open] summary::after { content: "–"; }
 .sec summary small { font-weight: 400; color: var(--ink-3); margin-left: 6px; }
 .sec .body { padding-bottom: 14px; font-size: 13px; }
-.kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }
+.kv { display: grid; grid-template-columns: 1fr fit-content(50%); gap: 4px 12px; }
 .kv div:nth-child(even) { text-align: right; font-weight: 600; }
 .factor { display: grid; grid-template-columns: 118px 1fr 34px; gap: 10px; align-items: center; margin: 5px 0; }
 .factor .muted { color: var(--ink-3); }
+.factor .neutral { color: var(--ink-3); font-size: 11px; }
+.units { display: inline-block; font-size: 11px; font-weight: 600; color: var(--ink-2); background: var(--paper-2); border-radius: 4px; padding: 0 6px; margin-left: 6px; vertical-align: 1px; }
 .bar { height: 6px; background: var(--paper-2); border-radius: 3px; overflow: hidden; }
 .bar i { display: block; height: 100%; border-radius: 3px; }
 .rec { display: grid; grid-template-columns: 78px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--paper-2); }

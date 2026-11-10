@@ -25,6 +25,7 @@ SUFFIX = {
     "POINT": "PT", "CRESCENT": "CRES", "PK": "PARK", "PRK": "PARK",
 }
 DIRECTION = {"NORTH": "N", "SOUTH": "S", "EAST": "E", "WEST": "W"}
+PREFIX = {"SAINT": "ST", "ST.": "ST", "MOUNT": "MT", "FORT": "FT"}  # "Saint Lukes Rd" == city's "ST LUKES RD"
 UNIT_RE = re.compile(
     r"\b(APT|APARTMENT|UNIT|STE|SUITE|FL|FLOOR|RM|ROOM|BSMT|PH)\b\.?\s*[\w-]*|#\s*[\w-]+",
     re.I,
@@ -74,7 +75,9 @@ def norm_street(name: str) -> str:
     words = s.split(" ")
     out = []
     for i, w in enumerate(words):
-        if w in DIRECTION and (i == 0 or i == len(words) - 1):
+        if i == 0 and w in PREFIX and len(words) > 1:
+            out.append(PREFIX[w])
+        elif w in DIRECTION and (i == 0 or i == len(words) - 1):
             out.append(DIRECTION[w])
         elif i == len(words) - 1 and w in SUFFIX:
             out.append(SUFFIX[w])

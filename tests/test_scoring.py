@@ -41,3 +41,11 @@ def test_budget_price_curve(store):
     assert p(4000) == 100.0
     assert p(2400) == 50.0
     assert p(2000) < 50
+
+
+def test_neutral_factors_count_in_the_average(store):
+    s = store.scorer.score(store.listings["FX-12"], store.features["FX-12"], "mit")  # unmatched address
+    used = [b for b in s["breakdown"] if not b.get("missing")]
+    assert any(b.get("neutral") for b in used)
+    expected = sum(b["weight"] * b["score"] for b in used) / sum(b["weight"] for b in used)
+    assert abs(s["total"] - round(expected, 1)) < 0.11

@@ -18,14 +18,15 @@ FACTORS: Dict[str, Dict[str, str]] = {
     "price": {"label": "Price", "how": "With a budget: 100 at <=85% of budget, 50 at budget, 0 at 115%. Without: rank of rent per bedroom (cheaper = higher)."},
     "commute": {"label": "Bike commute", "how": "Estimated bike minutes to your campus: 100 at <=10 min, 0 at >=45 min (straight line x 1.3 at 15 km/h)."},
     "transit": {"label": "T access", "how": "Walk minutes to the nearest subway / Green Line station: 100 at <=5 min, 0 at >=20 min."},
-    "building": {"label": "Building record", "how": "City complaints + violations at this address in the last 3 years. Each signal type counts severity x (1 + ln count), so repeats add less (heat, pests, mold, safety weigh most; trash tickets 0.3). Score = 90 x exp(-total/6): capped at 90 because no records is limited evidence, not proof. Address not found in city data = no data."},
-    "landlord": {"label": "Owner record", "how": "Start 70; +20 if owner-occupied; -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA."},
+    "building": {"label": "Building record", "how": "City complaints + violations at this address in the last 3 years. Each signal type counts severity x (1 + ln count), so repeats add less (heat, pests, mold, safety weigh most; trash tickets 0.3). Score = 90 x exp(-total/6): capped at 90 because no records is limited evidence, not proof. Address not found in city data = 50 (unknown counts as average, not a bonus)."},
+    "landlord": {"label": "Owner record", "how": "Start 70; +20 if owner-occupied; -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA. Owner not found = 50 (unknown counts as average)."},
     "street_safety": {"label": "Crash history", "how": "Rank of (injury crashes + 2 x pedestrian/bike crashes) within 150 m, 2021-2025, plus dark-hour bike crashes along the line to campus (fewer = higher)."},
     "quiet": {"label": "Traffic noise", "how": "Rank of the busiest road (AADT, vehicles/day) within 100 m among listings with a traffic count (quieter = higher). No count nearby = no data."},
     "freshness": {"label": "Listing freshness", "how": "Days on market: 100 at <=14 days, 0 at >=365 days. Very old listings are often stale or already rented."},
 }
 
 BUILDING_CAP = 90.0
+NEUTRAL = 50.0  # used when a Boston factor's data is missing: unknown = average, not a bonus
 
 DEFAULT_WEIGHTS: Dict[str, float] = {
     "price": 3, "commute": 3, "building": 3, "landlord": 2,
@@ -96,11 +97,16 @@ class Scorer:
             out["transit"] = None
 
         b = f.get("building") or {}
+        in_boston = (listing.get("city") or "").lower() == "boston"
         if b.get("available") and b.get("evidence", "records") != "unmatched":
             # capped at 90: an empty record is limited evidence, never a guarantee (feedback 11/4)
             out["building"] = round(BUILDING_CAP * pow(2.718281828, -b["severity_weighted"] / 6.0), 1)
+        elif in_boston and b.get("available"):
+            # address not found in city data: unknown counts as average, so missing evidence
+            # neither rewards nor punishes the listing (otherwise unmatched listings float to the top)
+            out["building"] = NEUTRAL
         else:
-            out["building"] = None
+            out["building"] = None  # factor not applicable here (e.g. Cambridge)
 
         o = f.get("owner") or {}
         if o.get("available"):
@@ -111,6 +117,8 @@ class Scorer:
             if o.get("out_of_state"):
                 s -= 10
             out["landlord"] = max(0.0, min(100.0, s))
+        elif in_boston:
+            out["landlord"] = NEUTRAL  # owner not found: unknown = average
         else:
             out["landlord"] = None
 
@@ -125,6 +133,19 @@ class Scorer:
         out["freshness"] = _lin(dom, 14, 365) if dom is not None else None
         return out
 
+    @staticmethod
+    def neutral_factors(listing: dict, f: dict) -> set:
+        """Factors scored NEUTRAL because the Boston data had no entry for this address."""
+        if (listing.get("city") or "").lower() != "boston":
+            return set()
+        out = set()
+        b = f.get("building") or {}
+        if b.get("available") and b.get("evidence") == "unmatched":
+            out.add("building")
+        if not (f.get("owner") or {}).get("available"):
+            out.add("landlord")
+        return out
+
     def score(self, listing: dict, f: dict, campus: str = "mit", weights: Optional[Dict[str, float]] = None, budget: Optional[float] = None) -> dict:
         w = dict(DEFAULT_WEIGHTS)
         if weights:
@@ -132,10 +153,13 @@ class Scorer:
                 if k in w and v is not None:
                     w[k] = max(0.0, min(5.0, float(v)))
         fs = self.factor_scores(listing, f, campus, budget)
+        neutral = self.neutral_factors(listing, f)
         num = den = 0.0
         breakdown = []
         for k, s in fs.items():
             entry = {"factor": k, "label": FACTORS[k]["label"], "score": s, "weight": w[k]}
+            if k in neutral:
+                entry["neutral"] = True
             if s is None:
                 entry["missing"] = True
             elif w[k] > 0:

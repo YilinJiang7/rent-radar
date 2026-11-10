@@ -10,7 +10,7 @@ import math
 import re
 from collections import Counter, defaultdict
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from . import config, signals
 from .geo import GridIndex, haversine_m
@@ -31,9 +31,11 @@ class EvidenceIndex:
         self.today = today or date.today()
         self.records = records
         self.rec_by_street: Dict[str, List[dict]] = defaultdict(list)
+        self.rec_by_name: Dict[str, List[dict]] = defaultdict(list)  # street name only (zip boundaries differ between sources)
         for r in records:
             if r.get("street_key"):
                 self.rec_by_street[r["street_key"]].append(r)
+                self.rec_by_name[r["street_key"].split("|")[0]].append(r)
         self.rec_grid = GridIndex(((r["lat"], r["lon"], r) for r in records if r.get("lat") and r.get("lon")), 100)
         self.rec_by_parcel: Dict[str, List[dict]] = defaultdict(list)
         for r in records:
@@ -45,9 +47,11 @@ class EvidenceIndex:
                 self.rec_by_owner[r["owner"]].append(r)
 
         self.parcels_by_street: Dict[str, List[dict]] = defaultdict(list)
+        self.parcels_by_name: Dict[str, List[dict]] = defaultdict(list)
         self.parcels_by_owner: Dict[str, List[dict]] = defaultdict(list)
         for p in parcels:
             self.parcels_by_street[p["street_key"]].append(p)
+            self.parcels_by_name[p["street_key"].split("|")[0]].append(p)
             if p.get("owner"):
                 self.parcels_by_owner[p["owner"]].append(p)
 
@@ -61,16 +65,32 @@ class EvidenceIndex:
         self.has_stations = bool(stations)
 
     # -- building record -------------------------------------------------------
+    @staticmethod
+    def _overlap(row: dict, listing: dict) -> bool:
+        return row["num_lo"] is not None and row["num_lo"] <= listing["num_hi"] and listing["num_lo"] <= row["num_hi"]
+
+    def _street_candidates(self, by_street: Dict, by_name: Dict, listing: dict) -> Tuple[List[dict], bool]:
+        """Rows on the listing's street. Same zip first; else same street name in a
+        neighbouring in-scope Boston zip (RentCast and the city draw zip lines differently,
+        e.g. 1019-1033 Commonwealth Ave is 02134 to the city and 02215 to RentCast)."""
+        sk = listing.get("street_key")
+        if not sk:
+            return [], False
+        rows = [r for r in by_street.get(sk, []) if self._overlap(r, listing)]
+        if rows:
+            return rows, False
+        name = sk.split("|")[0]
+        boston = set(config.BOSTON_ZIPS)
+        rows = [r for r in by_name.get(name, []) if r["street_key"].split("|")[1] in boston and self._overlap(r, listing)]
+        return rows, True
+
     def match_records(self, listing: dict) -> List[tuple]:
         """Return [(record, match_type)] for the listing's building."""
         hits = []
-        sk = listing.get("street_key")
-        if sk and sk in self.rec_by_street:
-            lo, hi = listing["num_lo"], listing["num_hi"]
-            for r in self.rec_by_street[sk]:
-                if r["num_lo"] is not None and r["num_lo"] <= hi and lo <= r["num_hi"]:
-                    exact = r["num_lo"] == lo and r["num_hi"] == hi
-                    hits.append((r, "address" if exact else "address_range"))
+        rows, other_zip = self._street_candidates(self.rec_by_street, self.rec_by_name, listing)
+        for r in rows:
+            exact = r["num_lo"] == listing["num_lo"] and r["num_hi"] == listing["num_hi"]
+            hits.append((r, ("address" if exact else "address_range") + ("_nearby_zip" if other_zip else "")))
         # parcel route: listing address -> assessment parcel ids -> RentSmart records on those parcels
         seen = {r["record_id"] for r, _m in hits}
         for pid in self.parcel_ids(listing):
@@ -87,10 +107,7 @@ class EvidenceIndex:
         return hits
 
     def parcels_for(self, listing: dict) -> List[dict]:
-        sk = listing.get("street_key")
-        if not sk or sk not in self.parcels_by_street:
-            return []
-        return [p for p in self.parcels_by_street[sk] if p["num_lo"] <= listing["num_hi"] and listing["num_lo"] <= p["num_hi"]]
+        return self._street_candidates(self.parcels_by_street, self.parcels_by_name, listing)[0]
 
     def parcel_ids(self, listing: dict) -> set:
         return {p["pid"] for p in self.parcels_for(listing) if p.get("pid")}

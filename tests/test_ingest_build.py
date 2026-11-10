@@ -73,10 +73,16 @@ def test_no_records_is_limited_evidence_not_reassurance(store):
     fl = summary.flags(store.listings["FX-11"], store.features["FX-11"], "mit")
     assert not any(f["kind"] == "good" and f["topic"] == "building" for f in fl)
     assert any("not proof" in f["text"] for f in fl)
-    # address not in city data at all -> no building score
+    # address not in city data at all -> neutral 50, flagged, so missing evidence is not a bonus
     assert store.features["FX-12"]["building"]["evidence"] == "unmatched"
     s12 = store.scorer.score(store.listings["FX-12"], store.features["FX-12"], "mit")
-    assert next(x for x in s12["breakdown"] if x["factor"] == "building").get("missing")
+    b12 = next(x for x in s12["breakdown"] if x["factor"] == "building")
+    assert b12["score"] == 50.0 and b12.get("neutral") is True
+    l12 = next(x for x in s12["breakdown"] if x["factor"] == "landlord")
+    assert l12["score"] == 50.0 and l12.get("neutral") is True
+    # Cambridge: factor not applicable -> left out entirely
+    s6 = store.scorer.score(store.listings["FX-6"], store.features["FX-6"], "mit")
+    assert next(x for x in s6["breakdown"] if x["factor"] == "building").get("missing")
 
 
 def test_flags_never_call_a_street_safe(store):

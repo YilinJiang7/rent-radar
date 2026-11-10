@@ -52,3 +52,8 @@ def test_trailing_unit_after_suffix_is_dropped():
     assert address.parse("1218 Commonwealth Ave 1, 02134").street == "COMMONWEALTH AVE"
     assert address.parse("100 Main St B", "02134").street == "MAIN ST"
     assert address.parse("451 Park Dr", "02215").street == "PARK DR"
+
+
+def test_saint_prefix_normalises_to_st():
+    assert address.parse("25 Saint Lukes Rd", "02134").street == "ST LUKES RD"
+    assert address.parse("25 St Lukes Rd", "02134").street == "ST LUKES RD"
