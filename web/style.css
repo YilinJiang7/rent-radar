@@ -56,7 +56,13 @@ main { display: grid; grid-template-columns: 400px 1fr; height: calc(100% - 56px
 .understood .lbl { font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .tag { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 13px; }
+.tag { cursor: pointer; user-select: none; }
+.tag:hover { border-color: var(--ink-3); }
 .tag.up { border-color: var(--ink); }
+.tag.fixed { cursor: default; }
+.tag .x { color: var(--ink-3); margin-left: 6px; font-weight: 600; }
+.tag:hover .x { color: var(--bad); }
+.understood .hint { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
 .verified { font-size: 12px; color: var(--good); margin-top: 8px; }
 .verified.warn { color: var(--bad); }
 .understood details { margin-top: 8px; font-size: 13px; }
@@ -67,9 +73,13 @@ main { display: grid; grid-template-columns: 400px 1fr; height: calc(100% - 56px
 .refusal { font-size: 14px; line-height: 1.5; }
 
 /* list */
-.listhead { display: flex; justify-content: space-between; align-items: center; margin: 22px 0 8px; }
+.listhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin: 22px 0 8px; }
+.listhead h2 { white-space: nowrap; }
 .listhead h2 { font-family: "Domine", serif; font-size: 17px; margin: 0; }
-.listhead h2 small { font-family: "Public Sans", sans-serif; font-weight: 400; color: var(--ink-3); font-size: 13px; margin-left: 6px; }
+.listtools { display: flex; gap: 8px; align-items: center; }
+.sort { font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 4px; }
+.sort select { font: inherit; font-size: 12px; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; background: var(--paper); }
+.listhead h2 small { display: block; font-family: "Public Sans", sans-serif; font-weight: 400; color: var(--ink-3); font-size: 12px; margin-top: 2px; white-space: normal; }
 .adjust { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; background: #fff; }
 .adjust h3 { font-size: 13px; margin: 14px 0 4px; }
 .adjust label { font-size: 12px; color: var(--ink-2); display: block; }

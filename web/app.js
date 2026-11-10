@@ -12,6 +12,7 @@ const scoreColor = (s) => (s == null ? "#9AA1A8" : s >= 70 ? "#2F7D5B" : s >= 50
 const state = {
   meta: null, weights: {}, campus: "mit", listings: [], byId: new Map(), markers: new Map(),
   agentIds: null, shown: 10, selected: null,
+  areas: [], sort: "score", plan: null, edited: false,
 };
 
 const EXAMPLES = [
@@ -34,7 +35,7 @@ const campusLayer = L.layerGroup().addTo(map);
 const legend = L.control({ position: "bottomleft" });
 legend.onAdd = () => {
   const d = L.DomUtil.create("div", "legend");
-  d.innerHTML = '<i style="background:#2F7D5B"></i>70+ <i style="background:#B9831F"></i>50–69 <i style="background:#B3402B"></i>under 50 · faded = older backup · hollow = Cambridge (listing only)';
+  d.innerHTML = '<i style="background:#2F7D5B"></i>70+ <i style="background:#B9831F"></i>50–69 <i style="background:#B3402B"></i>under 50 · faded = listed 91–180 days ago';
   return d;
 };
 legend.addTo(map);
@@ -48,8 +49,7 @@ const wParam = () => encodeURIComponent(JSON.stringify(state.weights));
 
 function pinStyle(l, on) {
   return { radius: on ? 10 : 6, weight: on ? 3 : 1, color: on ? "#1B2A3A" : "#fff",
-           fillColor: scoreColor(l.score), fillOpacity: l.stale ? 0.35 : 0.9,
-           ...(l.city === "Cambridge" && !on ? { fillOpacity: 0.08, color: "#5A6673", weight: 1.5 } : {}) };
+           fillColor: scoreColor(l.score), fillOpacity: l.stale ? 0.35 : 0.9 };
 }
 
 function drawPins() {
@@ -58,7 +58,7 @@ function drawPins() {
   const hi = new Set(state.agentIds || []);
   for (const l of state.listings) {
     const m = L.circleMarker([l.lat, l.lon], pinStyle(l, hi.has(l.id)))
-      .bindTooltip(`<b>${esc(street(l.address))}</b><br>${money(l.price)} · ${beds(l.bedrooms)} · score ${l.score ?? "–"}`);
+      .bindTooltip(`<b>${esc(street(l.address))}</b><br>${money(l.price)} · ${beds(l.bedrooms)} · score ${l.score ?? "–"}${l.city === "Cambridge" ? "<br><i>listing only, no city records</i>" : ""}`);
     m.on("click", () => openDetail(l.id));
     m.addTo(pins);
     state.markers.set(l.id, m);
@@ -86,6 +86,7 @@ async function loadListings() {
                                    cambridge: $("showCambridge").checked });
   if ($("maxPrice").value) p.set("max_price", $("maxPrice").value);
   if ($("minBeds").value) p.set("min_beds", $("minBeds").value);
+  if (state.areas.length) p.set("area", state.areas.join(","));
   const data = await api(`/api/listings?${p}&weights=${wParam()}`);
   state.listings = data.listings;
   state.byId = new Map(data.listings.map((l) => [l.id, l]));
@@ -117,15 +118,24 @@ function groupByBuilding(rows) {
   return [...seen.values()];
 }
 
+const SORTS = {
+  score: (a, b) => (b.score ?? -1) - (a.score ?? -1),
+  price: (a, b) => a.price - b.price,
+  bike: (a, b) => (a.bike_min ?? 999) - (b.bike_min ?? 999),
+  building: (a, b) => ((b.factors || {}).building ?? -1) - ((a.factors || {}).building ?? -1),
+  fresh: (a, b) => (a.days_on_market ?? 9999) - (b.days_on_market ?? 9999),
+};
+
 function renderCards() {
   let rows;
   if (state.agentIds) {
     rows = groupByBuilding(state.agentIds.map((id) => state.byId.get(id)).filter(Boolean));
     $("listTitle").innerHTML = `Agent’s picks <small>${rows.length}</small>`;
   } else {
-    rows = groupByBuilding(state.listings);
-    $("listTitle").innerHTML = `Best matches <small>${state.listings.length} listings in ${rows.length} buildings</small>`;
+    rows = groupByBuilding([...state.listings].sort(SORTS[state.sort] || SORTS.score));
+    $("listTitle").innerHTML = `${state.edited ? "Your edits" : "Best matches"} <small>${state.listings.length} listings in ${rows.length} buildings</small>`;
   }
+  if (state.agentIds && state.sort !== "score") rows.sort(SORTS[state.sort]);
   const shown = state.agentIds ? rows : rows.slice(0, state.shown);
   $("cards").innerHTML = shown.map(cardHTML).join("") +
     (!state.agentIds && rows.length > shown.length ? `<li class="more"><button class="ghost small" id="moreBtn">Show more</button></li>` : "") +
@@ -150,6 +160,7 @@ function renderWeights() {
   $("weights").querySelectorAll("input").forEach((inp) => inp.addEventListener("input", (e) => {
     state.weights[e.target.dataset.k] = Number(e.target.value);
     e.target.nextElementSibling.textContent = e.target.value;
+    if (state.plan) renderUnderstood();
     debounce(loadListings);
   }));
 }
@@ -267,22 +278,49 @@ function mdToHtml(md) {
   return out;
 }
 
-function understoodTags(r) {
-  const tags = [];
-  const f = (r.plan && r.plan.filters) || {};
+/* "I read this as": the agent's reading of the request as chips you can edit.
+   Filter chips remove with ×; priority chips toggle the weight between boosted (5) and default. */
+function chip(label, data, cls = "", title = "", removable = true) {
+  return `<span class="tag ${cls}" data-chip="${esc(data)}" title="${esc(title)}">${label}${removable ? '<span class="x">×</span>' : ""}</span>`;
+}
+
+function renderUnderstood() {
+  const r = state.plan;
+  if (!r) return;
+  const f = r.filters || {};
   const areaName = Object.fromEntries((state.meta.areas || []).map((a) => [a.zip, a.area]));
-  tags.push(`<span class="tag">${esc(CAMPUS_LABEL[(r.plan && r.plan.args && r.plan.args.campus) || state.campus] || "")}</span>`);
-  if (f.max_price) tags.push(`<span class="tag">≤ ${money(f.max_price)}</span>`);
-  if (f.min_beds != null) tags.push(`<span class="tag">${f.min_beds === 0 && f.max_beds === 0 ? "Studio" : f.min_beds + (f.max_beds == null ? "+" : "") + " bd"}</span>`);
-  (f.areas || []).forEach((z) => tags.push(`<span class="tag">${esc(areaName[z] || z)}</span>`));
-  if (f.max_bike_min) tags.push(`<span class="tag">bike ≤ ${f.max_bike_min} min</span>`);
-  if (f.include_stale) tags.push(`<span class="tag">incl. older backups</span>`);
-  tags.push(`<span class="tag">${Array.isArray(f.cities) ? "Boston only" : "Boston + Cambridge (listing only)"}</span>`);
-  const used = (r.plan && r.plan.weights_used) || {};
-  for (const [k, v] of Object.entries(used)) {
-    if (v > (state.meta.default_weights[k] ?? 0)) tags.push(`<span class="tag up">↑ ${esc(state.meta.factors[k].label)}</span>`);
+  const tags = [];
+  tags.push(chip(esc(CAMPUS_LABEL[state.campus] || ""), "campus", "fixed", "Change the campus in the top bar", false));
+  if ($("maxPrice").value) tags.push(chip(`≤ ${money($("maxPrice").value)}`, "price", "", "Remove the budget limit"));
+  if ($("minBeds").value !== "") tags.push(chip($("minBeds").value === "0" && f.max_beds === 0 ? "Studio" : `${$("minBeds").value}+ bd`, "beds", "", "Remove the bedroom filter"));
+  state.areas.forEach((z) => tags.push(chip(esc(areaName[z] || z), `area:${z}`, "", "Remove this neighborhood filter")));
+  if ($("showOlder").checked) tags.push(chip("incl. older backups", "older", "", "Hide listings older than 90 days"));
+  tags.push(chip($("showCambridge").checked ? "Boston + Cambridge (listing only)" : "Boston only", "cambridge", "", $("showCambridge").checked ? "Click to show Boston only" : "Click to include Cambridge", false));
+  for (const [k, v] of Object.entries(state.weights)) {
+    const d = state.meta.default_weights[k] ?? 0;
+    if (v > d) tags.push(chip(`↑ ${esc(state.meta.factors[k].label)} <small>${v}</small>`, `weight:${k}`, "up", `Weight raised from ${d} to ${v}. Click to reset to ${d}.`));
   }
-  return tags.join("");
+  $("chips").innerHTML = tags.join("");
+  $("chips").querySelectorAll(".tag").forEach((el) => el.addEventListener("click", () => onChip(el.dataset.chip)));
+}
+
+async function onChip(kind) {
+  if (kind === "campus") return;
+  if (kind === "price") $("maxPrice").value = "";
+  else if (kind === "beds") $("minBeds").value = "";
+  else if (kind.startsWith("area:")) state.areas = state.areas.filter((z) => z !== kind.slice(5));
+  else if (kind === "older") $("showOlder").checked = false;
+  else if (kind === "cambridge") $("showCambridge").checked = !$("showCambridge").checked;
+  else if (kind.startsWith("weight:")) {
+    const k = kind.slice(7);
+    state.weights[k] = state.meta.default_weights[k];
+    renderWeights();
+  }
+  // the agent's 5 picks no longer reflect the edited request: show the full ranked list instead
+  state.agentIds = null;
+  state.edited = true;
+  renderUnderstood();
+  await loadListings();
 }
 
 async function ask(ev) {
@@ -308,13 +346,17 @@ async function ask(ev) {
     $("maxPrice").value = f.max_price || "";
     $("minBeds").value = f.min_beds ?? "";
     $("showOlder").checked = !!f.include_stale;
-    const camZips = new Set((state.meta.areas || []).filter((a) => a.city === "Cambridge").map((a) => a.zip));
     $("showCambridge").checked = !Array.isArray(f.cities);
+    state.areas = (f.areas || []).slice();
+    state.plan = r.plan || {};
+    state.edited = false;
     const g = r.grounding || {};
     const mode = r.mode === "llm" ? `AI agent (${esc(r.model)})` : "offline mode";
-    box.innerHTML = `<div class="lbl">I read this as</div><div class="tags">${understoodTags(r)}</div>
+    box.innerHTML = `<div class="lbl">I read this as</div><div class="tags" id="chips"></div>
+      <div class="hint">Click × to drop a filter, or a ↑ priority to reset it. ↑ = the agent raised this weight above its default.</div>
       <div class="verified${g.ok ? "" : " warn"}">${g.ok ? `✓ All ${g.numbers_checked} numbers checked against the records` : `⚠ Unverified numbers: ${esc((g.ungrounded || []).join(", "))}`} · ${mode}${r.fallback_reason ? " (AI unavailable)" : ""}</div>
       <details><summary>Read the agent’s explanation</summary><div class="explain">${mdToHtml(r.answer)}</div></details>`;
+    renderUnderstood();
     box.querySelectorAll(".cite").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); openDetail(a.dataset.l); }));
     state.agentIds = (r.ranked || []).map((x) => x.id);
     await loadListings();
@@ -330,6 +372,9 @@ async function ask(ev) {
 
 function clearAgent() {
   state.agentIds = null;
+  state.areas = [];
+  state.edited = false;
+  state.plan = null;
   $("understood").classList.add("hidden");
   state.weights = { ...state.meta.default_weights };
   renderWeights();
@@ -402,9 +447,10 @@ async function init() {
     const open = $("adjust").classList.toggle("hidden") === false;
     $("adjustBtn").setAttribute("aria-expanded", open);
   });
-  ["maxPrice", "minBeds"].forEach((id) => $(id).addEventListener("input", () => debounce(loadListings)));
-  $("showOlder").addEventListener("change", loadListings);
-  $("showCambridge").addEventListener("change", loadListings);
+  ["maxPrice", "minBeds"].forEach((id) => $(id).addEventListener("input", () => { if (state.plan) renderUnderstood(); debounce(loadListings); }));
+  $("showOlder").addEventListener("change", () => { if (state.plan) renderUnderstood(); loadListings(); });
+  $("showCambridge").addEventListener("change", () => { if (state.plan) renderUnderstood(); loadListings(); });
+  $("sort").addEventListener("change", (e) => { state.sort = e.target.value; renderCards(); });
   $("resetW").addEventListener("click", () => { state.weights = { ...state.meta.default_weights }; renderWeights(); loadListings(); });
   $("closeDetail").addEventListener("click", () => { $("detail").classList.add("hidden"); state.selected = null;
     document.querySelectorAll(".card.on").forEach((c) => c.classList.remove("on")); });

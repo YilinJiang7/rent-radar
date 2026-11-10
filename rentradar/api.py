@@ -93,6 +93,7 @@ def listings(campus: str = config.DEFAULT_CAMPUS, weights: Optional[str] = None,
             "lat": l["lat"], "lon": l["lon"], "price": l["price"], "bedrooms": l["bedrooms"],
             "bathrooms": l["bathrooms"], "days_on_market": l["days_on_market"], "stale": bool(l["stale"]), "tier": l.get("tier"),
             "score": sc["total"], "coverage": sc["weight_coverage_pct"],
+            "factors": {b["factor"]: b["score"] for b in sc["breakdown"]},
             "bike_min": (f["commute"].get(campus) or {}).get("bike_min"),
             "records_3y": (f.get("building") or {}).get("records_window"),
             # staleness is shown as its own tag on the card, so keep the 3 flag slots for the place itself

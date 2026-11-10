@@ -27,7 +27,16 @@
 
     <div class="listhead">
       <h2 id="listTitle">Best matches</h2>
-      <button class="ghost small" id="adjustBtn" aria-expanded="false">Adjust</button>
+      <div class="listtools">
+        <label class="sort">Sort <select id="sort">
+          <option value="score">score</option>
+          <option value="price">price, low first</option>
+          <option value="bike">bike time to campus</option>
+          <option value="building">building record</option>
+          <option value="fresh">newest listing</option>
+        </select></label>
+        <button class="ghost small" id="adjustBtn" aria-expanded="false">Adjust</button>
+      </div>
     </div>
 
     <section class="adjust hidden" id="adjust">
