@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from datetime import date
 from pathlib import Path
 
@@ -66,12 +67,16 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--offline", action="store_true")
     ap.add_argument("--db", type=Path, default=config.DB_PATH)
+    ap.add_argument("--pause", type=float, default=12.0, help="seconds between cases in LLM mode (free-tier quota)")
     a = ap.parse_args(argv)
     store = Store(a.db)
     agent = Agent(store, use_llm=not a.offline)
     cases = json.loads((ROOT / "eval" / "agent_cases.json").read_text())
     rows, raw = [], []
-    for c in cases:
+    pause = 0.0 if a.offline or not agent.model else a.pause
+    for i, c in enumerate(cases):
+        if i and pause:
+            time.sleep(pause)  # stay under the free tier's per-minute request quota
         r = agent.run(c["query"])
         chk = check_case(c, r, store, expect_llm=agent.model is not None)
         rows.append(chk)

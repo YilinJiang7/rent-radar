@@ -205,3 +205,24 @@ def test_eval_marks_llm_fallback_as_failure(store):
          "fallback_reason": "Gemini HTTP 404"}
     assert m.check_case(case, r, store, expect_llm=True)["pass"] is False
     assert m.check_case(case, r, store, expect_llm=False)["pass"] is True
+
+
+def test_gemini_waits_on_429_and_resets_to_primary_per_question():
+    import httpx
+    from rentradar.agent.llm import GeminiModel
+    waits, seen = [], []
+
+    def handler(request):
+        model = request.url.path.split("/models/")[1].split(":")[0]
+        seen.append(model)
+        if len(seen) == 1:
+            return httpx.Response(429, json={"error": {"message": "quota"}})
+        return httpx.Response(200, json={"candidates": [{"content": {"role": "model", "parts": [{"text": "ok"}]}}]})
+
+    m = GeminiModel(api_key="t", model="main", fallbacks=["backup"], retries=2, sleep=waits.append,
+                    client=httpx.Client(transport=httpx.MockTransport(handler)))
+    m.generate("s", [{"role": "user", "parts": [{"text": "hi"}]}], [])
+    assert seen == ["main", "main"] and waits and waits[0] >= 20  # waited out the quota, no model hop
+    m.idx = 1
+    m.reset()
+    assert m.model == "main"

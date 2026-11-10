@@ -86,6 +86,8 @@ class Agent:
         owner_occ = owner_occ if owner_occ in ("plus", "neutral", "minus") else None
         res = None
         if self.model is not None:
+            if hasattr(self.model, "reset"):
+                self.model.reset()  # every question tries the primary model first
             try:
                 res = self._run_llm(query, campus, weights, owner_occ)
             except LLMError as e:

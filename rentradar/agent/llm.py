@@ -35,6 +35,7 @@ class ChatModel(Protocol):
 
 
 RETRYABLE = {429, 500, 502, 503, 504}
+RATE_LIMIT_WAIT = 20.0  # seconds to wait on HTTP 429 before retrying
 
 
 class GeminiModel:
@@ -60,6 +61,10 @@ class GeminiModel:
         self.retries = retries
         self.sleep = sleep or time.sleep
         self.usage = {"prompt_tokens": 0, "output_tokens": 0, "calls": 0, "retries": 0, "model_switches": 0}
+
+    def reset(self) -> None:
+        """Start the next conversation on the primary model again."""
+        self.idx = 0
 
     @property
     def model(self) -> str:
@@ -97,8 +102,11 @@ class GeminiModel:
                 if attempt < self.retries:
                     self.usage["retries"] += 1
                     wait = 1.5 * (2 ** attempt)
+                    if r is not None and r.status_code == 429:
+                        # free-tier quota is per minute: wait it out instead of hopping models
+                        wait = max(wait, RATE_LIMIT_WAIT)
                     if r is not None and r.headers.get("retry-after", "").isdigit():
-                        wait = min(10.0, float(r.headers["retry-after"]))
+                        wait = min(60.0, float(r.headers["retry-after"]))
                     self.sleep(wait)
             else:
                 # still overloaded: move to the next model, if any
