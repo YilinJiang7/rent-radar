@@ -67,6 +67,13 @@ def resolve_areas(areas: List[str]):
     return zips, unknown
 
 
+def building_key(l: dict) -> str:
+    """Same building = same parsed street + house number (units differ)."""
+    if l.get("street_key") and l.get("num_lo") is not None:
+        return f"{l['street_key']}#{l['num_lo']}"
+    return (l.get("address_line1") or l.get("address") or l["id"]).upper()
+
+
 def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: Optional[float] = None,
                   min_beds: Optional[float] = None, max_beds: Optional[float] = None,
                   areas: Optional[List[str]] = None, max_bike_min: Optional[float] = None,
@@ -97,6 +104,18 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
     owner_occupied_pref = owner_occupied_pref if owner_occupied_pref in ("plus", "neutral", "minus") else "plus"
     ranked = store.scored(rows, campus, weights, budget or max_price, owner_occupied_pref)
     limit = max(1, min(int(limit or 5), 20))
+    # one result per building: the best-scoring unit, with a count of the other matching units,
+    # so five picks are five different buildings rather than four units of one
+    picks, by_bldg = [], {}
+    for r in ranked:
+        k = building_key(r["listing"])
+        if k in by_bldg:
+            by_bldg[k]["other_units_in_building"] += 1
+            continue
+        item = _brief(r["listing"], store.features[r["listing"]["id"]], r["score"], campus)
+        item["other_units_in_building"] = 0
+        by_bldg[k] = item
+        picks.append(item)
     w = dict(DEFAULT_WEIGHTS)
     w.update({k: v for k, v in (weights or {}).items() if k in w})
     return {
@@ -108,8 +127,9 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
                     "backup_days": config.BACKUP_DAYS},
         "weights_used": w,
         "count_matching": len(rows),
+        "buildings_matching": len(picks),
         "stale_hidden": stale_hidden,
-        "results": [_brief(r["listing"], store.features[r["listing"]["id"]], r["score"], campus) for r in ranked[:limit]],
+        "results": picks[:limit],
     }
 
 

@@ -132,10 +132,10 @@ function renderCards() {
   let rows;
   if (state.agentIds) {
     rows = groupByBuilding(state.agentIds.map((id) => state.byId.get(id)).filter(Boolean));
-    $("listTitle").innerHTML = `Agent’s picks <small>${rows.length}</small>`;
+    $("listTitle").innerHTML = `Agent’s picks <small>for ${esc(CAMPUS_LABEL[state.campus])} · ${rows.length} buildings</small>`;
   } else {
     rows = groupByBuilding([...state.listings].sort(SORTS[state.sort] || SORTS.score));
-    $("listTitle").innerHTML = `${state.edited ? "Your edits" : "Best matches"} <small>${state.listings.length} listings in ${rows.length} buildings</small>`;
+    $("listTitle").innerHTML = `${state.edited ? "Your edits" : "Best matches"} <small>for ${esc(CAMPUS_LABEL[state.campus])} · ${state.listings.length} listings in ${rows.length} buildings</small>`;
   }
   if (state.agentIds && state.sort !== "score") rows.sort(SORTS[state.sort]);
   const shown = state.agentIds ? rows : rows.slice(0, state.shown);
@@ -177,6 +177,9 @@ function renderCampus() {
 function setCampus(k) {
   if (k === state.campus) return;
   state.campus = k;
+  // the agent's picks were chosen for the old campus: keep its filters and weights, re-rank for the new one
+  if (state.agentIds) { state.agentIds = null; state.edited = true; }
+  if (state.plan) renderUnderstood();
   renderCampus(); drawCampuses(); loadListings();
   if (state.selected) openDetail(state.selected);
 }

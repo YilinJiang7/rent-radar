@@ -226,3 +226,10 @@ def test_gemini_waits_on_429_and_resets_to_primary_per_question():
     m.idx = 1
     m.reset()
     assert m.model == "main"
+
+
+def test_rank_listings_returns_distinct_buildings(store):
+    out = tools.rank_listings(store, campus="mit", include_stale=True, include_cambridge=True, limit=20)
+    keys = [tools.building_key(store.listings[r["id"]]) for r in out["results"]]
+    assert len(keys) == len(set(keys))
+    assert out["buildings_matching"] <= out["count_matching"]

@@ -63,7 +63,9 @@ WALK_M_PER_MIN = 80           # ~4.8 km/h
 BIKE_M_PER_MIN = 250          # ~15 km/h
 
 # --- LLM ----------------------------------------------------------------------
-# gemini-2.5-flash returns 404 for new users (Nov 2026); override in .env if needed
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
-GEMINI_FALLBACK_MODELS = os.getenv("GEMINI_FALLBACK_MODELS", "gemini-3.1-flash-lite")
+# Model choice (see README "Model choice"): 2.5-flash returns 404 for new users; 3.8-flash was
+# overloaded (503) in every test run, so each question fell through to 3.1-flash-lite, which
+# passed 20/20 on its own. Flash-Lite is therefore the primary and 3.8-flash the backup.
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
+GEMINI_FALLBACK_MODELS = os.getenv("GEMINI_FALLBACK_MODELS", "gemini-3.8-flash")
 AGENT_MAX_STEPS = int(os.getenv("AGENT_MAX_STEPS", "8"))

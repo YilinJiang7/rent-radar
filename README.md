@@ -49,7 +49,18 @@ If you don't have the `make` command, each target is a one-line command listed i
 
 1. Go to <https://aistudio.google.com>, open **Get API key**, then **Create API key**. The free tier is enough.
 2. Put the key in `.env` as `GEMINI_API_KEY=...`. The `.env` file is git-ignored.
-3. Restart `make run`. About the data will show `AI: gemini:gemini-3.8-flash`. (`gemini-2.5-flash` returns 404 for new users.) If the model is overloaded (429/503), the client retries with backoff, then tries `GEMINI_FALLBACK_MODELS` (default `gemini-3.1-flash-lite`), and only then falls back to offline mode.
+3. Restart `make run`. About the data will show `AI: gemini:gemini-3.1-flash-lite`. If the model is overloaded (503) the client retries with backoff, waits out per-minute quota errors (429), then tries `GEMINI_FALLBACK_MODELS` (default `gemini-3.8-flash`), and only then falls back to offline mode.
+
+#### Model choice
+
+The model was chosen by testing, not up front:
+
+1. **`gemini-2.5-flash`** was the first plan. It now returns HTTP 404 for new API users.
+2. **`gemini-3.8-flash`** became the primary, with `gemini-3.1-flash-lite` as backup. In every evaluation run (Nov 4 and Nov 9) 3.8 Flash answered HTTP 503 "high demand", so each question waited through retries and then fell through to Flash-Lite.
+3. On the final Nov 9 run, Flash-Lite answered **18 of 18** agent questions (plus 2 of 2 guardrail refusals): 20/20 cases passed, 0 made-up numbers, 0 budget or bedroom violations (`eval/results/agent_llm_2026-11-09.json`).
+4. Since the backup model passed every check on its own and responds in seconds instead of waiting through 503 retries, **Flash-Lite is now the primary** and 3.8 Flash the backup.
+
+The agent's job is mostly tool selection and argument filling over a fixed schema, and the grounding check catches any invented number, so a smaller model is sufficient here.
 
 Without a key, or if a Gemini call fails (rate limit, no network), the agent switches to **offline mode**. Offline mode uses a rule-based request parser over the same tools, so the demo always works.
 
@@ -165,5 +176,5 @@ docs/           architecture, data sources, midpoint report, proposal
 ## External resources and AI assistance
 
 - Libraries: FastAPI, Uvicorn, httpx, python-dotenv, pytest, Leaflet.
-- Model: Google Gemini (`gemini-3.8-flash` by default, `gemini-3.1-flash-lite` as backup) through the Gemini API.
+- Model: Google Gemini (`gemini-3.1-flash-lite` by default, `gemini-3.8-flash` as backup) through the Gemini API. See "Model choice".
 - AI tools: **Claude (Anthropic)** drafted most of the modules, tests and docs in this repo, working from the author's proposal, design decisions and instructor feedback. The project idea, scope and data choices are the author's. Per course policy, the author is responsible for reviewing and running the code and for being able to explain all of it.
