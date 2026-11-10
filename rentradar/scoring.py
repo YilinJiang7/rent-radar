@@ -18,8 +18,8 @@ FACTORS: Dict[str, Dict[str, str]] = {
     "price": {"label": "Price", "how": "With a budget: 100 at <=85% of budget, 50 at budget, 0 at 115%. Without: rank of rent per bedroom (cheaper = higher)."},
     "commute": {"label": "Bike commute", "how": "Estimated bike minutes to your campus: 100 at <=10 min, 0 at >=45 min (straight line x 1.3 at 15 km/h)."},
     "transit": {"label": "T access", "how": "Walk minutes to the nearest subway / Green Line station: 100 at <=5 min, 0 at >=20 min."},
-    "building": {"label": "Building record", "how": "City complaints + violations at this address in the last 3 years. Each signal type counts severity x (1 + ln count), so repeats add less (heat, pests, mold, safety weigh most; trash tickets 0.3). Score = 90 x exp(-total/6): capped at 90 because no records is limited evidence, not proof. Address not found in city data = the average building score of all listings (unknown counts as average, not a bonus)."},
-    "landlord": {"label": "Owner record", "how": "Start 70; +20 if the owner lives in the building (set to 0 or -20 under Adjust if you would rather not share with the owner); -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA. Owner not found = the average owner score of all listings (unknown counts as average)."},
+    "building": {"label": "Building record", "how": "City complaints + violations at this address in the last 3 years. Each signal type counts severity x (1 + ln count), so repeats add less (heat, pests, mold, safety weigh most; trash tickets 0.3). Score = 90 x exp(-total/6): capped at 90 because no records is limited evidence, not proof. Address not found in city data = the average building score of listings in the same area (unknown counts as average, not a bonus)."},
+    "landlord": {"label": "Owner record", "how": "Start 70; +20 if the owner lives in the building (set to 0 or -20 under Adjust if you would rather not share with the owner); -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA. Owner not found = the average owner score of listings in the same area (unknown counts as average)."},
     "street_safety": {"label": "Crash history", "how": "Rank of (injury crashes + 2 x pedestrian/bike crashes) within 150 m, 2021-2025, plus dark-hour bike crashes along the line to campus (fewer = higher)."},
     "quiet": {"label": "Traffic noise", "how": "Rank of the busiest road (AADT, vehicles/day) within 100 m among listings with a traffic count (quieter = higher). No count nearby = no data."},
     "freshness": {"label": "Listing freshness", "how": "Days on market: 100 at <=14 days, 0 at >=365 days. Very old listings are often stale or already rented."},
@@ -30,6 +30,7 @@ BUILDING_CAP = 90.0
 # factor ("unknown = average"), so missing evidence is never a bonus or a penalty. The means are
 # computed in Scorer.__init__ over listings that do have data.
 OWNER_OCC_PREF = {"plus": 20.0, "neutral": 0.0, "minus": -20.0}  # owner lives in the building
+MIN_AREA_SAMPLE = 20  # an area needs this many scored listings before its own mean is used
 
 DEFAULT_WEIGHTS: Dict[str, float] = {
     "price": 3, "commute": 3, "building": 3, "landlord": 2,
@@ -75,13 +76,28 @@ class Scorer:
                        for c in ("mit", "harvard", "seas")}
         self.aadt = sorted((features[l["id"]].get("noise") or {})["max_aadt_100m"]
                            for l in listings if (features[l["id"]].get("noise") or {}).get("max_aadt_100m"))
-        # dataset means used as the "unknown" value (see note above)
-        bl = [self._building_score(features[l["id"]]) for l in listings]
-        bl = [x for x in bl if x is not None]
-        ow = [self._owner_score(features[l["id"]], "plus") for l in listings]
-        ow = [x for x in ow if x is not None]
-        self.neutral = {"building": round(sum(bl) / len(bl), 1) if bl else 50.0,
-                        "landlord": round(sum(ow) / len(ow), 1) if ow else 50.0}
+        # "unknown" values: the mean of each factor over listings *in the same area* that do have
+        # data (Yilin, 11/9: closer than a city-wide mean, stable across searches). Falls back to
+        # the city-wide mean when an area has fewer than MIN_AREA_SAMPLE scored listings.
+        by_area: Dict[str, Dict[str, List[float]]] = {}
+        allv: Dict[str, List[float]] = {"building": [], "landlord": []}
+        for l in listings:
+            f = features[l["id"]]
+            for k, v in (("building", self._building_score(f)), ("landlord", self._owner_score(f, "plus"))):
+                if v is not None:
+                    by_area.setdefault(l.get("area_zip") or "", {"building": [], "landlord": []})[k].append(v)
+                    allv[k].append(v)
+        mean = lambda xs: round(sum(xs) / len(xs), 1) if xs else 50.0  # noqa: E731
+        self.neutral_city = {k: mean(v) for k, v in allv.items()}
+        self.neutral_area = {z: {k: (mean(v) if len(v) >= MIN_AREA_SAMPLE else self.neutral_city[k]) for k, v in d.items()}
+                             for z, d in by_area.items()}
+
+    def neutral_for(self, listing: dict) -> Dict[str, float]:
+        return self.neutral_area.get(listing.get("area_zip") or "", self.neutral_city)
+
+    @property
+    def neutral(self) -> Dict[str, float]:  # city-wide values (tests, About dialog)
+        return self.neutral_city
 
     @staticmethod
     def _building_score(f: dict) -> Optional[float]:
@@ -136,7 +152,7 @@ class Scorer:
         elif in_boston and b.get("available"):
             # address not found in city data: unknown = dataset average, so missing evidence
             # neither rewards nor punishes the listing (otherwise unmatched listings float to the top)
-            out["building"] = self.neutral["building"]
+            out["building"] = self.neutral_for(listing)["building"]
         else:
             out["building"] = None  # factor not applicable here (e.g. Cambridge)
 
@@ -144,7 +160,7 @@ class Scorer:
         if os_ is not None:
             out["landlord"] = os_
         elif in_boston:
-            out["landlord"] = self.neutral["landlord"]  # owner not found: unknown = average
+            out["landlord"] = self.neutral_for(listing)["landlord"]  # owner not found: unknown = area average
         else:
             out["landlord"] = None
 
@@ -197,4 +213,5 @@ class Scorer:
         total = round(num / den, 1) if den else None
         covered = round(100 * den / sum(v for v in w.values()) if sum(w.values()) else 0)
         return {"total": total, "weight_coverage_pct": covered, "breakdown": breakdown, "campus": campus,
-                "neutral_values": self.neutral, "owner_occ_pref": owner_occ_pref}
+                "neutral_values": self.neutral_for(listing), "neutral_scope": listing.get("area"),
+                "owner_occ_pref": owner_occ_pref}

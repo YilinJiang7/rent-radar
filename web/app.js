@@ -214,7 +214,7 @@ async function openDetail(id) {
   const factors = e.score.breakdown.map((f) => `<div class="factor" title="${esc(state.meta.factors[f.factor].how)}">
       <span>${esc(f.label)}</span><div class="bar"><i style="width:${f.score ?? 0}%;background:${scoreColor(f.score)}"></i></div>
       <span class="${f.missing ? "muted" : f.neutral ? "neutral" : ""}">${f.missing ? "n/a" : f.neutral ? `${Math.round(f.score)} unknown` : Math.round(f.score)}</span></div>`).join("");
-  h += sec("Why this score", null, factors + `<div class="note">Based on ${e.score.weight_coverage_pct}% of your weights. “unknown” = the city has no entry for this address, so it gets the average of all listings (building ${Math.round((e.score.neutral_values || {}).building ?? 50)}, owner ${Math.round((e.score.neutral_values || {}).landlord ?? 50)}): missing data is never a bonus or a penalty. “n/a” = factor not available here and left out. Hover a row for its formula.</div>`);
+  h += sec("Why this score", null, factors + `<div class="note">Based on ${e.score.weight_coverage_pct}% of your weights. “unknown” = the city has no entry for this address, so it gets the average of ${esc(e.score.neutral_scope || "the area")} listings that do have data (building ${Math.round((e.score.neutral_values || {}).building ?? 50)}, owner ${Math.round((e.score.neutral_values || {}).landlord ?? 50)}): missing data is never a bonus or a penalty. “n/a” = factor not available here and left out. Hover a row for its formula.</div>`);
 
   // building
   if (!b.available) h += sec("Building record", null, `<div class="note">${esc(b.reason)}</div>`);

@@ -77,11 +77,12 @@ def test_no_records_is_limited_evidence_not_reassurance(store):
     assert store.features["FX-12"]["building"]["evidence"] == "unmatched"
     s12 = store.scorer.score(store.listings["FX-12"], store.features["FX-12"], "mit")
     b12 = next(x for x in s12["breakdown"] if x["factor"] == "building")
-    assert b12.get("neutral") is True and b12["score"] == store.scorer.neutral["building"]
+    nv = store.scorer.neutral_for(store.listings["FX-12"])
+    assert b12.get("neutral") is True and b12["score"] == nv["building"]
     l12 = next(x for x in s12["breakdown"] if x["factor"] == "landlord")
-    assert l12.get("neutral") is True and l12["score"] == store.scorer.neutral["landlord"]
-    # the "unknown" value is the dataset mean of listings that do have data, never 100
-    assert 0 < store.scorer.neutral["building"] < 90
+    assert l12.get("neutral") is True and l12["score"] == nv["landlord"]
+    # the "unknown" value is a mean of listings that do have data, never 100
+    assert 0 < nv["building"] < 90
     # Cambridge: factor not applicable -> left out entirely
     s6 = store.scorer.score(store.listings["FX-6"], store.features["FX-6"], "mit")
     assert next(x for x in s6["breakdown"] if x["factor"] == "building").get("missing")
