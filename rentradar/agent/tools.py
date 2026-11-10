@@ -73,8 +73,13 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
                   include_stale: bool = False, weights: Optional[Dict[str, float]] = None,
                   budget: Optional[float] = None, limit: int = 5, include_cambridge: bool = False) -> dict:
     campus = campus if campus in config.CAMPUSES else config.DEFAULT_CAMPUS
-    # v1 scope: Boston (full evidence). Cambridge only when asked for by name or flag.
-    cities = None if (areas or include_cambridge) else config.DEFAULT_CITIES
+    # Scope: Boston has the full evidence. Cambridge (listing data only) is included when the
+    # student's campus is in Cambridge (MIT, Harvard Yard), when a Cambridge area is named, or on
+    # request; a SEAS (Allston) student gets Boston only unless they ask.
+    if areas or include_cambridge or campus in ("mit", "harvard"):
+        cities = None
+    else:
+        cities = config.DEFAULT_CITIES
     if areas:
         zips, unknown = resolve_areas(areas)
         if unknown:

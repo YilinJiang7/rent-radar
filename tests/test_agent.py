@@ -51,11 +51,14 @@ def test_rank_listings_respects_filters_hides_older_and_defaults_to_boston(store
     assert all(r["price"] <= 3000 for r in out["results"])
     assert "FX-3" not in {r["id"] for r in out["results"]}  # older backup listing
     assert out["stale_hidden"] == 1
-    assert all(store.listings[r["id"]]["city"] == "Boston" for r in out["results"])  # Boston-first scope
+    both = tools.rank_listings(store, campus="mit", limit=20)
+    assert any(store.listings[r["id"]]["city"] == "Cambridge" for r in both["results"])  # MIT commute: Cambridge included
+    seas = tools.rank_listings(store, campus="seas", limit=20)
+    assert all(store.listings[r["id"]]["city"] == "Boston" for r in seas["results"])  # SEAS: Boston only
+    cam = tools.rank_listings(store, campus="seas", include_cambridge=True, limit=20)
+    assert any(store.listings[r["id"]]["city"] == "Cambridge" for r in cam["results"])
     allx = tools.rank_listings(store, campus="mit", max_price=3000, include_stale=True, limit=20)
     assert "FX-3" in {r["id"] for r in allx["results"]}
-    cam = tools.rank_listings(store, campus="mit", include_cambridge=True, limit=20)
-    assert any(store.listings[r["id"]]["city"] == "Cambridge" for r in cam["results"])
     named = tools.rank_listings(store, campus="mit", areas=["Central Square"], limit=20)
     assert named["count_matching"] == 1  # naming a Cambridge area includes it
 

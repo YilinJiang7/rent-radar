@@ -67,7 +67,7 @@ Without a key, or if a Gemini call fails (rate limit, no network), the agent swi
 | Transit | MBTA GTFS | Nearest subway or Green Line station and its lines; bus stops within 400 m |
 | Traffic noise | Road traffic volume (AADT) on nearby crash records | Busiest road within 100 m |
 
-**Scope: Boston first.** Owner and RentSmart data cover Boston only, so search and the map default to Boston (Allston, Brighton, Fenway). Cambridge listings can be switched on and are shown hollow and labeled "listing only". Factors without data are **left out of the score and labeled "n/a"**. They are never guessed, and the card shows what share of the weights the score is based on.
+**Scope: Boston has the evidence.** Owner and RentSmart data cover Boston only (Allston, Brighton, Fenway). Cambridge listings are shown too, because MIT and Harvard Yard students live there, but hollow on the map and labeled "listing only"; they can be switched off. The agent includes Cambridge for MIT / Harvard Yard commutes and sticks to Boston for SEAS unless asked. Factors without data are **left out of the score and labeled "n/a"**. They are never guessed, and the card shows what share of the weights the score is based on.
 
 **No records is not reassurance.** A Boston address with no complaints or violations gets a neutral note ("no city records since …, not proof of no problems") and a building score of at most 90. An address that cannot be matched to city data at all gets no building score. Every count is shown with its window and radius (for example "within 150 m, 2021-2025"). Crash counts describe traffic on the street, not anyone's personal safety.
 

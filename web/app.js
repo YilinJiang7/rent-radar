@@ -23,8 +23,11 @@ const CAMPUS_LABEL = { mit: "MIT", harvard: "Harvard Yard", seas: "SEAS" };
 
 /* ---------- map ---------- */
 const map = L.map("map", { zoomControl: true }).setView([42.360, -71.115], 13);
-L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-  maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+// OpenStreetMap standard tiles: free, no API key (CARTO basemaps now require one).
+// Pins carry the colour, so the base map is dimmed a little to keep them readable.
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19, className: "basemap",
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 }).addTo(map);
 const pins = L.layerGroup().addTo(map);
 const campusLayer = L.layerGroup().addTo(map);
@@ -274,7 +277,7 @@ function understoodTags(r) {
   (f.areas || []).forEach((z) => tags.push(`<span class="tag">${esc(areaName[z] || z)}</span>`));
   if (f.max_bike_min) tags.push(`<span class="tag">bike ≤ ${f.max_bike_min} min</span>`);
   if (f.include_stale) tags.push(`<span class="tag">incl. older backups</span>`);
-  if (Array.isArray(f.cities)) tags.push(`<span class="tag">Boston only</span>`);
+  tags.push(`<span class="tag">${Array.isArray(f.cities) ? "Boston only" : "Boston + Cambridge (listing only)"}</span>`);
   const used = (r.plan && r.plan.weights_used) || {};
   for (const [k, v] of Object.entries(used)) {
     if (v > (state.meta.default_weights[k] ?? 0)) tags.push(`<span class="tag up">↑ ${esc(state.meta.factors[k].label)}</span>`);
@@ -306,7 +309,7 @@ async function ask(ev) {
     $("minBeds").value = f.min_beds ?? "";
     $("showOlder").checked = !!f.include_stale;
     const camZips = new Set((state.meta.areas || []).filter((a) => a.city === "Cambridge").map((a) => a.zip));
-    $("showCambridge").checked = !!((r.plan && r.plan.args || {}).include_cambridge) || (f.areas || []).some((z) => camZips.has(z));
+    $("showCambridge").checked = !Array.isArray(f.cities);
     const g = r.grounding || {};
     const mode = r.mode === "llm" ? `AI agent (${esc(r.model)})` : "offline mode";
     box.innerHTML = `<div class="lbl">I read this as</div><div class="tags">${understoodTags(r)}</div>

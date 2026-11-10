@@ -48,9 +48,10 @@ Hard rules:
 - If nothing matches, say so and suggest which constraint to relax.
 - No complaint records is limited evidence, not proof the building is fine; say so when it comes up.
 - Every count needs its context: the time window and the radius (e.g. "within 150 m, 2021-2025").
-- Searches cover Boston unless the student names a Cambridge area or asks for Cambridge
-  (include_cambridge). Older listings (91-180 days) are backups that may be gone; include them only
-  if asked or if nothing fresh matches, and label them as older.
+- Cambridge listings are included automatically for MIT and Harvard Yard commutes and have listing
+  data only (no complaints or owner); say so when you recommend one. Older listings (91-180 days)
+  are backups that may be gone; include them only if asked or if nothing fresh matches, and label
+  them as older.
 """
 
 

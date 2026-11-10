@@ -156,6 +156,7 @@ dialog p { font-size: 13px; color: var(--ink-2); }
 .legend { background: rgba(251, 250, 247, .95); padding: 6px 10px; border-radius: 8px; font-size: 12px; line-height: 1.7; border: 1px solid var(--line); }
 .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px 0 8px; }
 .legend i:first-child { margin-left: 0; }
+.basemap { filter: saturate(0.35) brightness(1.04); }
 .leaflet-tooltip { font: 12px/1.4 "Public Sans", sans-serif; }
 
 @media (max-width: 860px) {
