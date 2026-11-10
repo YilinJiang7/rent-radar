@@ -12,8 +12,9 @@ const scoreColor = (s) => (s == null ? "#9AA1A8" : s >= 70 ? "#2F7D5B" : s >= 50
 const state = {
   meta: null, weights: {}, campus: "mit", listings: [], byId: new Map(), markers: new Map(),
   agentIds: null, shown: 10, selected: null,
-  areas: [], sort: "score", plan: null, edited: false,
+  areas: [], sort: "score", plan: null, edited: false, ownerOcc: "plus",
 };
+const OWNER_LABEL = { plus: "owner in building = good", neutral: "owner in building = neutral", minus: "rather not share with owner" };
 
 const EXAMPLES = [
   ["Quiet, MIT, under $2.5k", "budget 2500, class at MIT, hate noise, bike home at night"],
@@ -87,6 +88,7 @@ async function loadListings() {
   if ($("maxPrice").value) p.set("max_price", $("maxPrice").value);
   if ($("minBeds").value) p.set("min_beds", $("minBeds").value);
   if (state.areas.length) p.set("area", state.areas.join(","));
+  p.set("owner_occ", state.ownerOcc);
   const data = await api(`/api/listings?${p}&weights=${wParam()}`);
   state.listings = data.listings;
   state.byId = new Map(data.listings.map((l) => [l.id, l]));
@@ -187,7 +189,7 @@ const ICON = { bad: "!", good: "✓", info: "i" };
 
 async function openDetail(id) {
   state.selected = id;
-  const p = new URLSearchParams({ campus: state.campus });
+  const p = new URLSearchParams({ campus: state.campus, owner_occ: state.ownerOcc });
   if ($("maxPrice").value) p.set("budget", $("maxPrice").value);
   const e = await api(`/api/listings/${encodeURIComponent(id)}?${p}&weights=${wParam()}`);
   const m = state.markers.get(id);
@@ -211,8 +213,8 @@ async function openDetail(id) {
   // why this score
   const factors = e.score.breakdown.map((f) => `<div class="factor" title="${esc(state.meta.factors[f.factor].how)}">
       <span>${esc(f.label)}</span><div class="bar"><i style="width:${f.score ?? 0}%;background:${scoreColor(f.score)}"></i></div>
-      <span class="${f.missing ? "muted" : f.neutral ? "neutral" : ""}">${f.missing ? "n/a" : f.neutral ? "50 unknown" : Math.round(f.score)}</span></div>`).join("");
-  h += sec("Why this score", null, factors + `<div class="note">Based on ${e.score.weight_coverage_pct}% of your weights. “unknown” = the city has no entry for this address, scored as average (50) so missing data is never a bonus; “n/a” = factor not available here and left out. Hover a row for its formula.</div>`);
+      <span class="${f.missing ? "muted" : f.neutral ? "neutral" : ""}">${f.missing ? "n/a" : f.neutral ? `${Math.round(f.score)} unknown` : Math.round(f.score)}</span></div>`).join("");
+  h += sec("Why this score", null, factors + `<div class="note">Based on ${e.score.weight_coverage_pct}% of your weights. “unknown” = the city has no entry for this address, so it gets the average of all listings (building ${Math.round((e.score.neutral_values || {}).building ?? 50)}, owner ${Math.round((e.score.neutral_values || {}).landlord ?? 50)}): missing data is never a bonus or a penalty. “n/a” = factor not available here and left out. Hover a row for its formula.</div>`);
 
   // building
   if (!b.available) h += sec("Building record", null, `<div class="note">${esc(b.reason)}</div>`);
@@ -292,7 +294,10 @@ function renderUnderstood() {
   const tags = [];
   tags.push(chip(esc(CAMPUS_LABEL[state.campus] || ""), "campus", "fixed", "Change the campus in the top bar", false));
   if ($("maxPrice").value) tags.push(chip(`≤ ${money($("maxPrice").value)}`, "price", "", "Remove the budget limit"));
-  if ($("minBeds").value !== "") tags.push(chip($("minBeds").value === "0" && f.max_beds === 0 ? "Studio" : `${$("minBeds").value}+ bd`, "beds", "", "Remove the bedroom filter"));
+  if ($("minBeds").value !== "") {
+    const mn = Number($("minBeds").value), mx = f.max_beds;
+    tags.push(chip(mn === 0 && mx === 0 ? "Studio" : mx != null && mx === mn ? `${mn} bd` : `${mn}+ bd`, "beds", "", "Remove the bedroom filter"));
+  }
   state.areas.forEach((z) => tags.push(chip(esc(areaName[z] || z), `area:${z}`, "", "Remove this neighborhood filter")));
   if ($("showOlder").checked) tags.push(chip("incl. older backups", "older", "", "Hide listings older than 90 days"));
   tags.push(chip($("showCambridge").checked ? "Boston + Cambridge (listing only)" : "Boston only", "cambridge", "", $("showCambridge").checked ? "Click to show Boston only" : "Click to include Cambridge", false));
@@ -300,6 +305,7 @@ function renderUnderstood() {
     const d = state.meta.default_weights[k] ?? 0;
     if (v > d) tags.push(chip(`↑ ${esc(state.meta.factors[k].label)} <small>${v}</small>`, `weight:${k}`, "up", `Weight raised from ${d} to ${v}. Click to reset to ${d}.`));
   }
+  if (state.ownerOcc !== "plus") tags.push(chip(esc(OWNER_LABEL[state.ownerOcc]), "owner", "", "Click to treat an owner in the building as a good sign again"));
   $("chips").innerHTML = tags.join("");
   $("chips").querySelectorAll(".tag").forEach((el) => el.addEventListener("click", () => onChip(el.dataset.chip)));
 }
@@ -311,6 +317,7 @@ async function onChip(kind) {
   else if (kind.startsWith("area:")) state.areas = state.areas.filter((z) => z !== kind.slice(5));
   else if (kind === "older") $("showOlder").checked = false;
   else if (kind === "cambridge") $("showCambridge").checked = !$("showCambridge").checked;
+  else if (kind === "owner") setOwnerOcc("plus", false);
   else if (kind.startsWith("weight:")) {
     const k = kind.slice(7);
     state.weights[k] = state.meta.default_weights[k];
@@ -333,7 +340,7 @@ async function ask(ev) {
   box.innerHTML = '<span class="lbl">Thinking…</span>';
   try {
     const r = await api("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: q, campus: state.campus }) });
+      body: JSON.stringify({ query: q, campus: state.campus, owner_occ: state.ownerOcc }) });
     if (r.mode === "guardrail") {
       box.innerHTML = `<div class="lbl">Can’t do that one</div><div class="refusal">${esc(r.answer)}</div>`;
       if (state.agentIds) { state.agentIds = null; renderCards(); drawPins(); }
@@ -347,6 +354,7 @@ async function ask(ev) {
     $("minBeds").value = f.min_beds ?? "";
     $("showOlder").checked = !!f.include_stale;
     $("showCambridge").checked = !Array.isArray(f.cities);
+    if (f.owner_occupied_pref) setOwnerOcc(f.owner_occupied_pref, false);
     state.areas = (f.areas || []).slice();
     state.plan = r.plan || {};
     state.edited = false;
@@ -379,6 +387,13 @@ function clearAgent() {
   state.weights = { ...state.meta.default_weights };
   renderWeights();
   loadListings();
+}
+
+function setOwnerOcc(v, reload = true) {
+  state.ownerOcc = v;
+  $("ownerSeg").querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", b.dataset.v === v));
+  if (state.plan) renderUnderstood();
+  if (reload) { loadListings(); if (state.selected) openDetail(state.selected); }
 }
 
 /* ---------- about ---------- */
@@ -451,7 +466,8 @@ async function init() {
   $("showOlder").addEventListener("change", () => { if (state.plan) renderUnderstood(); loadListings(); });
   $("showCambridge").addEventListener("change", () => { if (state.plan) renderUnderstood(); loadListings(); });
   $("sort").addEventListener("change", (e) => { state.sort = e.target.value; renderCards(); });
-  $("resetW").addEventListener("click", () => { state.weights = { ...state.meta.default_weights }; renderWeights(); loadListings(); });
+  $("ownerSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => setOwnerOcc(b.dataset.v)));
+  $("resetW").addEventListener("click", () => { state.weights = { ...state.meta.default_weights }; renderWeights(); setOwnerOcc("plus", false); loadListings(); });
   $("closeDetail").addEventListener("click", () => { $("detail").classList.add("hidden"); state.selected = null;
     document.querySelectorAll(".card.on").forEach((c) => c.classList.remove("on")); });
   $("aboutBtn").addEventListener("click", () => $("about").showModal());

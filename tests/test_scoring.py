@@ -49,3 +49,16 @@ def test_neutral_factors_count_in_the_average(store):
     assert any(b.get("neutral") for b in used)
     expected = sum(b["weight"] * b["score"] for b in used) / sum(b["weight"] for b in used)
     assert abs(s["total"] - round(expected, 1)) < 0.11
+
+
+def test_owner_occupied_preference_flips_the_bonus(store):
+    l, f = store.listings["FX-2"], store.features["FX-2"]  # owner-occupied two-family
+    get = lambda pref: next(b for b in store.scorer.score(l, f, "mit", owner_occ_pref=pref)["breakdown"] if b["factor"] == "landlord")["score"]  # noqa: E731
+    assert get("plus") - get("neutral") == 20 and get("neutral") - get("minus") == 20
+
+
+def test_budget_raises_price_weight_and_landlord_phrase_sets_pref():
+    from rentradar.agent import planner
+    p = planner.parse("1 bed under 2500 near MIT, I'd rather not live in the same building as the landlord")
+    assert p.weights["price"] >= 4 and p.owner_occupied_pref == "minus"
+    assert planner.parse("quiet place near MIT").owner_occupied_pref == "plus"

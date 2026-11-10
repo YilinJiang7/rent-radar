@@ -69,7 +69,7 @@ Without a key, or if a Gemini call fails (rate limit, no network), the agent swi
 
 **Scope: Boston has the evidence.** Owner and RentSmart data cover Boston only (Allston, Brighton, Fenway). Cambridge listings are shown too, because MIT and Harvard Yard students live there, but hollow on the map and labeled "listing only"; they can be switched off. The agent includes Cambridge for MIT / Harvard Yard commutes and sticks to Boston for SEAS unless asked. Factors without data are **left out of the score and labeled "n/a"**. They are never guessed, and the card shows what share of the weights the score is based on.
 
-**No records is not reassurance.** A Boston address with no complaints or violations gets a neutral note ("no city records since …, not proof of no problems") and a building score of at most 90. An address that cannot be matched to city data at all gets no building score. Every count is shown with its window and radius (for example "within 150 m, 2021-2025"). Crash counts describe traffic on the street, not anyone's personal safety.
+**No records is not reassurance.** A Boston address with no complaints or violations gets a neutral note ("no city records since …, not proof of no problems") and a building score of at most 90. An address that cannot be matched to city data at all is scored at the **dataset average** for that factor (shown as "unknown"), so missing evidence is never a bonus or a penalty; the same holds when no owner of record is found. Every count is shown with its window and radius (for example "within 150 m, 2021-2025"). Crash counts describe traffic on the street, not anyone's personal safety.
 
 **Coverage, not "100% of listings".** RentCast is one provider's sample, not the rental market. The build reports what the pipeline could retrieve and validate: the snapshot funnel (retrieved → in scope → seen recently → ≤ 180 days → shown / backups) and, for Boston listings, the share matched to a city parcel, with an owner of record, with records, with no records, and unmatched. Both tables appear under About the data.
 
@@ -89,7 +89,7 @@ The score is a weighted average of 0–100 factor scores. Weights run from 0 to 
 | Price | 3 | Against a budget: 100 at ≤85% of budget, 50 at budget, 0 at 115%. With no budget: rank of rent per bedroom. |
 | Bike commute | 3 | 100 at ≤10 min, 0 at ≥45 min |
 | Building record | 3 | Per signal type: severity × (1 + ln count), so repeats add less. Trash tickets weigh 0.3; heat, pests, mold and safety weigh 2.5–3. Score = 100·exp(−total / 6), using the last 3 years. |
-| Owner record | 2 | Starts at 70. +20 if owner-occupied, −5 per serious record across the owner's properties (max −60), −10 if mailing address is outside MA. |
+| Owner record | 2 | Starts at 70. +20 if the owner lives in the building (switchable to 0 or −20 under Adjust), −5 per serious record across the owner's properties (max −60), −10 if mailing address is outside MA. |
 | Street safety | 2 | Rank of (injury + 2 × pedestrian/bike crashes within 150 m + after-dark bike crashes along the route) |
 | Traffic noise | 1 | Rank of the busiest nearby road's AADT. No traffic count within 100 m counts as no data. |
 | T access | 1 | 100 at ≤5 min walk, 0 at ≥20 min |

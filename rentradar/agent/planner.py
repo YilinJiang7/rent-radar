@@ -30,6 +30,7 @@ class Plan:
     max_bike_min: Optional[float] = None
     include_stale: bool = False
     include_cambridge: bool = False
+    owner_occupied_pref: str = "plus"
     weights: Dict[str, float] = field(default_factory=lambda: dict(DEFAULT_WEIGHTS))
     notes: List[str] = field(default_factory=list)
 
@@ -37,7 +38,8 @@ class Plan:
         return {k: v for k, v in {
             "campus": self.campus, "max_price": self.max_price, "min_beds": self.min_beds,
             "max_beds": self.max_beds, "areas": self.areas, "max_bike_min": self.max_bike_min,
-            "include_stale": self.include_stale, "include_cambridge": self.include_cambridge, "weights": self.weights,
+            "include_stale": self.include_stale, "include_cambridge": self.include_cambridge,
+            "owner_occupied_pref": self.owner_occupied_pref, "weights": self.weights,
         }.items() if v is not None}
 
 
@@ -74,6 +76,7 @@ def parse(query: str, campus_hint: Optional[str] = None) -> Plan:
         p.max_price = _money(m.group(1))
         if p.max_price:
             p.notes.append(f"budget <= ${p.max_price:,.0f}")
+            p.weights["price"] = max(p.weights["price"], 4)  # a stated budget means money matters
 
     # bedrooms
     if re.search(r"\bstudio\b", q):
@@ -101,6 +104,9 @@ def parse(query: str, campus_hint: Optional[str] = None) -> Plan:
         p.include_stale = True
     if re.search(r"\bcambridge\b", q) and not p.areas:
         p.include_cambridge = True
+
+    if re.search(r"(don'?t|do not|rather not|no) .*(live|living|share|sharing).*(landlord|owner)|landlord.*(not|n't) .*(same|live|building)|owner[- ]occupied.*(no|not|avoid)", q):
+        p.owner_occupied_pref = "minus"
 
     # preferences -> weights
     w = p.weights

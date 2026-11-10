@@ -18,15 +18,18 @@ FACTORS: Dict[str, Dict[str, str]] = {
     "price": {"label": "Price", "how": "With a budget: 100 at <=85% of budget, 50 at budget, 0 at 115%. Without: rank of rent per bedroom (cheaper = higher)."},
     "commute": {"label": "Bike commute", "how": "Estimated bike minutes to your campus: 100 at <=10 min, 0 at >=45 min (straight line x 1.3 at 15 km/h)."},
     "transit": {"label": "T access", "how": "Walk minutes to the nearest subway / Green Line station: 100 at <=5 min, 0 at >=20 min."},
-    "building": {"label": "Building record", "how": "City complaints + violations at this address in the last 3 years. Each signal type counts severity x (1 + ln count), so repeats add less (heat, pests, mold, safety weigh most; trash tickets 0.3). Score = 90 x exp(-total/6): capped at 90 because no records is limited evidence, not proof. Address not found in city data = 50 (unknown counts as average, not a bonus)."},
-    "landlord": {"label": "Owner record", "how": "Start 70; +20 if owner-occupied; -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA. Owner not found = 50 (unknown counts as average)."},
+    "building": {"label": "Building record", "how": "City complaints + violations at this address in the last 3 years. Each signal type counts severity x (1 + ln count), so repeats add less (heat, pests, mold, safety weigh most; trash tickets 0.3). Score = 90 x exp(-total/6): capped at 90 because no records is limited evidence, not proof. Address not found in city data = the average building score of all listings (unknown counts as average, not a bonus)."},
+    "landlord": {"label": "Owner record", "how": "Start 70; +20 if the owner lives in the building (set to 0 or -20 under Adjust if you would rather not share with the owner); -5 per serious record (heat, pests, mold, safety, structural) at any property of the same owner in 3 years (max -60); -10 if the owner mails from outside MA. Owner not found = the average owner score of all listings (unknown counts as average)."},
     "street_safety": {"label": "Crash history", "how": "Rank of (injury crashes + 2 x pedestrian/bike crashes) within 150 m, 2021-2025, plus dark-hour bike crashes along the line to campus (fewer = higher)."},
     "quiet": {"label": "Traffic noise", "how": "Rank of the busiest road (AADT, vehicles/day) within 100 m among listings with a traffic count (quieter = higher). No count nearby = no data."},
     "freshness": {"label": "Listing freshness", "how": "Days on market: 100 at <=14 days, 0 at >=365 days. Very old listings are often stale or already rented."},
 }
 
 BUILDING_CAP = 90.0
-NEUTRAL = 50.0  # used when a Boston factor's data is missing: unknown = average, not a bonus
+# When a Boston factor has no data for an address, it is scored at the dataset mean of that
+# factor ("unknown = average"), so missing evidence is never a bonus or a penalty. The means are
+# computed in Scorer.__init__ over listings that do have data.
+OWNER_OCC_PREF = {"plus": 20.0, "neutral": 0.0, "minus": -20.0}  # owner lives in the building
 
 DEFAULT_WEIGHTS: Dict[str, float] = {
     "price": 3, "commute": 3, "building": 3, "landlord": 2,
@@ -72,8 +75,37 @@ class Scorer:
                        for c in ("mit", "harvard", "seas")}
         self.aadt = sorted((features[l["id"]].get("noise") or {})["max_aadt_100m"]
                            for l in listings if (features[l["id"]].get("noise") or {}).get("max_aadt_100m"))
+        # dataset means used as the "unknown" value (see note above)
+        bl = [self._building_score(features[l["id"]]) for l in listings]
+        bl = [x for x in bl if x is not None]
+        ow = [self._owner_score(features[l["id"]], "plus") for l in listings]
+        ow = [x for x in ow if x is not None]
+        self.neutral = {"building": round(sum(bl) / len(bl), 1) if bl else 50.0,
+                        "landlord": round(sum(ow) / len(ow), 1) if ow else 50.0}
 
-    def factor_scores(self, listing: dict, f: dict, campus: str, budget: Optional[float] = None) -> Dict[str, Optional[float]]:
+    @staticmethod
+    def _building_score(f: dict) -> Optional[float]:
+        b = f.get("building") or {}
+        if b.get("available") and b.get("evidence", "records") != "unmatched":
+            # capped at 90: an empty record is limited evidence, never a guarantee (feedback 11/4)
+            return round(BUILDING_CAP * pow(2.718281828, -b["severity_weighted"] / 6.0), 1)
+        return None
+
+    @staticmethod
+    def _owner_score(f: dict, owner_occ_pref: str) -> Optional[float]:
+        o = f.get("owner") or {}
+        if not o.get("available"):
+            return None
+        s = 70.0
+        if o.get("owner_occupied"):
+            s += OWNER_OCC_PREF.get(owner_occ_pref, 20.0)
+        s -= min(60, 5 * (o.get("portfolio_serious_records_window") or 0))
+        if o.get("out_of_state"):
+            s -= 10
+        return max(0.0, min(100.0, s))
+
+    def factor_scores(self, listing: dict, f: dict, campus: str, budget: Optional[float] = None,
+                      owner_occ_pref: str = "plus") -> Dict[str, Optional[float]]:
         out: Dict[str, Optional[float]] = {}
         price = listing["price"]
         if budget:
@@ -98,27 +130,21 @@ class Scorer:
 
         b = f.get("building") or {}
         in_boston = (listing.get("city") or "").lower() == "boston"
-        if b.get("available") and b.get("evidence", "records") != "unmatched":
-            # capped at 90: an empty record is limited evidence, never a guarantee (feedback 11/4)
-            out["building"] = round(BUILDING_CAP * pow(2.718281828, -b["severity_weighted"] / 6.0), 1)
+        bs = self._building_score(f)
+        if bs is not None:
+            out["building"] = bs
         elif in_boston and b.get("available"):
-            # address not found in city data: unknown counts as average, so missing evidence
+            # address not found in city data: unknown = dataset average, so missing evidence
             # neither rewards nor punishes the listing (otherwise unmatched listings float to the top)
-            out["building"] = NEUTRAL
+            out["building"] = self.neutral["building"]
         else:
             out["building"] = None  # factor not applicable here (e.g. Cambridge)
 
-        o = f.get("owner") or {}
-        if o.get("available"):
-            s = 70.0
-            if o.get("owner_occupied"):
-                s += 20
-            s -= min(60, 5 * (o.get("portfolio_serious_records_window") or 0))
-            if o.get("out_of_state"):
-                s -= 10
-            out["landlord"] = max(0.0, min(100.0, s))
+        os_ = self._owner_score(f, owner_occ_pref)
+        if os_ is not None:
+            out["landlord"] = os_
         elif in_boston:
-            out["landlord"] = NEUTRAL  # owner not found: unknown = average
+            out["landlord"] = self.neutral["landlord"]  # owner not found: unknown = average
         else:
             out["landlord"] = None
 
@@ -146,13 +172,14 @@ class Scorer:
             out.add("landlord")
         return out
 
-    def score(self, listing: dict, f: dict, campus: str = "mit", weights: Optional[Dict[str, float]] = None, budget: Optional[float] = None) -> dict:
+    def score(self, listing: dict, f: dict, campus: str = "mit", weights: Optional[Dict[str, float]] = None,
+              budget: Optional[float] = None, owner_occ_pref: str = "plus") -> dict:
         w = dict(DEFAULT_WEIGHTS)
         if weights:
             for k, v in weights.items():
                 if k in w and v is not None:
                     w[k] = max(0.0, min(5.0, float(v)))
-        fs = self.factor_scores(listing, f, campus, budget)
+        fs = self.factor_scores(listing, f, campus, budget, owner_occ_pref)
         neutral = self.neutral_factors(listing, f)
         num = den = 0.0
         breakdown = []
@@ -169,4 +196,5 @@ class Scorer:
             breakdown.append(entry)
         total = round(num / den, 1) if den else None
         covered = round(100 * den / sum(v for v in w.values()) if sum(w.values()) else 0)
-        return {"total": total, "weight_coverage_pct": covered, "breakdown": breakdown, "campus": campus}
+        return {"total": total, "weight_coverage_pct": covered, "breakdown": breakdown, "campus": campus,
+                "neutral_values": self.neutral, "owner_occ_pref": owner_occ_pref}

@@ -63,10 +63,10 @@ class Store:
             out.append(l)
         return out
 
-    def scored(self, rows: List[dict], campus: str, weights=None, budget=None) -> List[dict]:
+    def scored(self, rows: List[dict], campus: str, weights=None, budget=None, owner_occ_pref: str = "plus") -> List[dict]:
         res = []
         for l in rows:
-            s = self.scorer.score(l, self.features[l["id"]], campus, weights, budget)
+            s = self.scorer.score(l, self.features[l["id"]], campus, weights, budget, owner_occ_pref)
             res.append({"listing": l, "score": s})
         res.sort(key=lambda x: (x["score"]["total"] is None, -(x["score"]["total"] or 0), x["listing"]["price"]))
         return res

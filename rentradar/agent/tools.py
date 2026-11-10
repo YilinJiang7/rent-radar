@@ -71,7 +71,8 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
                   min_beds: Optional[float] = None, max_beds: Optional[float] = None,
                   areas: Optional[List[str]] = None, max_bike_min: Optional[float] = None,
                   include_stale: bool = False, weights: Optional[Dict[str, float]] = None,
-                  budget: Optional[float] = None, limit: int = 5, include_cambridge: bool = False) -> dict:
+                  budget: Optional[float] = None, limit: int = 5, include_cambridge: bool = False,
+                  owner_occupied_pref: str = "plus") -> dict:
     campus = campus if campus in config.CAMPUSES else config.DEFAULT_CAMPUS
     # Scope: Boston has the full evidence. Cambridge (listing data only) is included when the
     # student's campus is in Cambridge (MIT, Harvard Yard), when a Cambridge area is named, or on
@@ -93,7 +94,8 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
         stale_hidden = len(store.filter(max_price=max_price, min_beds=min_beds, max_beds=max_beds, areas=areas,
                                         cities=cities, campus=campus, max_bike_min=max_bike_min,
                                         include_stale=True)) - len(rows)
-    ranked = store.scored(rows, campus, weights, budget or max_price)
+    owner_occupied_pref = owner_occupied_pref if owner_occupied_pref in ("plus", "neutral", "minus") else "plus"
+    ranked = store.scored(rows, campus, weights, budget or max_price, owner_occupied_pref)
     limit = max(1, min(int(limit or 5), 20))
     w = dict(DEFAULT_WEIGHTS)
     w.update({k: v for k, v in (weights or {}).items() if k in w})
@@ -101,7 +103,8 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
         "campus": config.CAMPUSES[campus]["name"],
         "filters": {"max_price": max_price, "min_beds": min_beds, "max_beds": max_beds, "areas": areas,
                     "max_bike_min": max_bike_min, "include_stale": include_stale,
-                    "cities": cities or "as areas", "stale_days": config.FRESH_DAYS,
+                    "cities": cities or "as areas", "owner_occupied_pref": owner_occupied_pref,
+                    "stale_days": config.FRESH_DAYS,
                     "backup_days": config.BACKUP_DAYS},
         "weights_used": w,
         "count_matching": len(rows),
@@ -111,14 +114,15 @@ def rank_listings(store: Store, campus: str = config.DEFAULT_CAMPUS, max_price: 
 
 
 def get_listing_evidence(store: Store, listing_id: str, campus: str = config.DEFAULT_CAMPUS,
-                         weights: Optional[Dict[str, float]] = None, budget: Optional[float] = None) -> dict:
+                         weights: Optional[Dict[str, float]] = None, budget: Optional[float] = None,
+                         owner_occupied_pref: str = "plus") -> dict:
     campus = campus if campus in config.CAMPUSES else config.DEFAULT_CAMPUS
     l = store.listings.get(listing_id)
     if not l:
         return {"error": f"unknown listing_id {listing_id}"}
     campus = campus if campus in config.CAMPUSES else config.DEFAULT_CAMPUS
     f = store.features[listing_id]
-    score = store.scorer.score(l, f, campus, weights, budget)
+    score = store.scorer.score(l, f, campus, weights, budget, owner_occupied_pref)
     return {
         "id": l["id"],
         "flags": summary.flags(l, f, campus),
@@ -185,6 +189,7 @@ DECLARATIONS = [
                 "max_bike_min": {"type": "number", "description": "Maximum estimated bike minutes to campus"},
                 "include_stale": {"type": "boolean", "description": "Also include older backup listings (91-180 days on market; may be gone). Default false"},
                 "include_cambridge": {"type": "boolean", "description": "Include Cambridge listings (listing data only: no complaint or owner records yet). Default false = Boston only"},
+                "owner_occupied_pref": {"type": "string", "enum": ["plus", "neutral", "minus"], "description": "How to treat a building where the owner lives: plus (default, +20), neutral (0), minus (-20) when the student would rather not share the building with the landlord"},
                 "weights": WEIGHT_SCHEMA,
                 "limit": {"type": "integer", "description": "How many results (default 5, max 20)"},
             },
@@ -195,7 +200,8 @@ DECLARATIONS = [
         "description": "Full evidence card for one listing: score breakdown, building complaints/violations with record ids, owner of record, crashes, commute, transit, traffic noise.",
         "parameters": {
             "type": "object",
-            "properties": {"listing_id": {"type": "string"}, "campus": CAMPUS_SCHEMA, "weights": WEIGHT_SCHEMA},
+            "properties": {"listing_id": {"type": "string"}, "campus": CAMPUS_SCHEMA, "weights": WEIGHT_SCHEMA,
+                           "owner_occupied_pref": {"type": "string", "enum": ["plus", "neutral", "minus"]}},
             "required": ["listing_id"],
         },
     },

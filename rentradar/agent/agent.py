@@ -31,7 +31,9 @@ How to work:
    ("1 bedroom" / "1 bed" / "1br" means min_beds=1, max_beds=1; "studio" means 0 and 0; only "at least"
    or "N+" leaves max_beds unset); campus (mit, harvard, seas); neighborhoods -> areas; priorities ->
    weights (0-5) on price, commute, building, landlord, street_safety, quiet, transit, freshness. Raise
-   weights for what they stress; leave the others at their defaults. Do NOT set include_cambridge or
+   weights for what they stress; leave the others at their defaults. A stated budget means money
+   matters: set price to at least 4. If they say they would rather not live in the same building as
+   the landlord, set owner_occupied_pref to "minus" ("neutral" if they just don't care). Do NOT set include_cambridge or
    include_stale unless the student asks for Cambridge or for older listings.
 2. Call rank_listings first. Then call get_listing_evidence for the top 2-3 results before recommending.
 3. Answer in short markdown: one line on how you read the request (filters + weights you changed), then
@@ -73,38 +75,42 @@ class Agent:
         self.model = model if model is not None else (default_model() if use_llm else None)
 
     # ------------------------------------------------------------------
-    def run(self, query: str, campus: Optional[str] = None, weights: Optional[Dict[str, float]] = None) -> dict:
+    def run(self, query: str, campus: Optional[str] = None, weights: Optional[Dict[str, float]] = None,
+            owner_occ: Optional[str] = None) -> dict:
         t0 = time.time()
         refusal = guardrails.check(query)
         if refusal:
             return {"mode": "guardrail", "answer": refusal, "ranked": [], "tool_trace": [], "plan": None,
                     "grounding": {"numbers_checked": 0, "ungrounded": [], "ok": True}, "guardrail": "fair_housing",
                     "seconds": round(time.time() - t0, 2)}
+        owner_occ = owner_occ if owner_occ in ("plus", "neutral", "minus") else None
         res = None
         if self.model is not None:
             try:
-                res = self._run_llm(query, campus, weights)
+                res = self._run_llm(query, campus, weights, owner_occ)
             except LLMError as e:
-                res = self._run_offline(query, campus, weights)
+                res = self._run_offline(query, campus, weights, owner_occ)
                 res["fallback_reason"] = str(e)[:200]
         else:
-            res = self._run_offline(query, campus, weights)
+            res = self._run_offline(query, campus, weights, owner_occ)
         if guardrails.mentions_safety(query) and guardrails.SAFETY_NOTE not in res["answer"]:
             res["answer"] += "\n\n_" + guardrails.SAFETY_NOTE + "_"
         res["seconds"] = round(time.time() - t0, 2)
         return res
 
     # ------------------------------------------------------------------
-    def _context_line(self, campus, weights) -> str:
+    def _context_line(self, campus, weights, owner_occ=None) -> str:
         bits = []
         if campus:
             bits.append(f"campus selected in the UI: {campus}")
         if weights:
             bits.append("weights set on the sliders: " + json.dumps(weights))
+        if owner_occ and owner_occ != "plus":
+            bits.append(f"owner_occupied_pref set in the UI: {owner_occ}")
         return ("\n\n(Context: " + "; ".join(bits) + ")") if bits else ""
 
-    def _run_llm(self, query: str, campus, weights) -> dict:
-        contents: List[dict] = [{"role": "user", "parts": [{"text": query + self._context_line(campus, weights)}]}]
+    def _run_llm(self, query: str, campus, weights, owner_occ=None) -> dict:
+        contents: List[dict] = [{"role": "user", "parts": [{"text": query + self._context_line(campus, weights, owner_occ)}]}]
         trace: List[dict] = []
         outputs: List[Any] = []
         plan = ranked = None
@@ -121,7 +127,7 @@ class Agent:
                 responses = []
                 for c in calls:
                     args = c.get("args") or {}
-                    out = tools.call(self.store, c["name"], args, campus=campus)
+                    out = tools.call(self.store, c["name"], args, campus=campus, owner_occupied_pref=owner_occ)
                     outputs.append(out)
                     trace.append({"tool": c["name"], "args": args, "result": _summary(c["name"], out)})
                     if c["name"] == "rank_listings" and "results" in out:
@@ -154,13 +160,15 @@ class Agent:
                 "usage": getattr(self.model, "usage", None)}
 
     # ------------------------------------------------------------------
-    def _run_offline(self, query: str, campus, weights) -> dict:
+    def _run_offline(self, query: str, campus, weights, owner_occ=None) -> dict:
         info = self._offline_info(query)
         if info:
             return info
         p = planner.parse(query, campus)
         if weights:
             p.weights.update({k: v for k, v in weights.items() if k in p.weights})
+        if owner_occ and p.owner_occupied_pref == "plus":  # the UI setting is the default; the text wins
+            p.owner_occupied_pref = owner_occ
         args = p.tool_args()
         trace, outputs = [], []
         ranked = tools.call(self.store, "rank_listings", args)
@@ -168,7 +176,8 @@ class Agent:
         trace.append({"tool": "rank_listings", "args": args, "result": _summary("rank_listings", ranked)})
         evid = []
         for r in ranked["results"][:3]:
-            e = tools.call(self.store, "get_listing_evidence", {"listing_id": r["id"], "campus": p.campus, "weights": p.weights})
+            e = tools.call(self.store, "get_listing_evidence", {"listing_id": r["id"], "campus": p.campus, "weights": p.weights,
+                                                                 "owner_occupied_pref": p.owner_occupied_pref})
             outputs.append(e)
             trace.append({"tool": "get_listing_evidence", "args": {"listing_id": r["id"]}, "result": _summary("get_listing_evidence", e)})
             evid.append(e)

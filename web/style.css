@@ -32,6 +32,8 @@ button { font: inherit; cursor: pointer; }
 .seg button { border: 0; background: none; padding: 6px 14px; border-radius: 999px; color: var(--ink-2); font-weight: 500; }
 .seg button[aria-checked="true"] { background: var(--ink); color: var(--paper); }
 .seg span { color: var(--ink-3); font-size: 12px; padding: 0 8px 0 10px; align-self: center; }
+.seg.small { margin: 4px 0 0; }
+.seg.small button { padding: 4px 11px; font-size: 12px; }
 .ghost { border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 6px 14px; }
 .ghost:hover { border-color: var(--ink-3); }
 .ghost.small { padding: 3px 12px; font-size: 13px; }

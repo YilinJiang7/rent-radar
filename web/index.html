@@ -46,6 +46,12 @@
       </div>
       <label class="toggle"><input id="showOlder" type="checkbox"> Show older backups (listed 91–180 days ago, may be gone)</label>
       <label class="toggle"><input id="showCambridge" type="checkbox" checked> Include Cambridge (listings only: no city records or owner yet)</label>
+      <h3>Owner living in the building</h3>
+      <div class="seg small" id="ownerSeg" role="radiogroup" aria-label="Owner living in the building">
+        <button role="radio" data-v="plus" aria-checked="true">Good sign</button>
+        <button role="radio" data-v="neutral" aria-checked="false">Don’t care</button>
+        <button role="radio" data-v="minus" aria-checked="false">Rather not</button>
+      </div>
       <h3>What matters to you</h3>
       <div id="weights"></div>
       <button class="link" id="resetW" type="button">Reset to defaults</button>
