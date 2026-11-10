@@ -36,7 +36,7 @@ def listing(i, line1, unit, city, zip_, lat, lon, price, beds, baths, dom, agent
 
 LISTINGS = [
     listing(1, "12 Example St", "Apt 2", "Boston", "02134", 42.3535, -71.1320, 2400, 1, 1, 12, "A. Agent"),
-    listing(2, "40-42 Sample Ave", "Unit 3", "Boston", "02134", 42.3550, -71.1290, 2900, 2, 1, 30),
+    listing(2, "40-42 Sample Ave", "Unit 3", "Allston", "02134", 42.3550, -71.1290, 2900, 2, 1, 30),
     listing(3, "7 Fixture Rd", None, "Boston", "02135", 42.3490, -71.1560, 2100, 1, 1, 150),  # "older" tier
     listing(4, "88 Testing Ter", "# 5", "Boston", "02215", 42.3470, -71.1000, 3300, 2, 1, 5),
     listing(5, "3 Placeholder Pl", "Apt 1", "Boston", "02135", 42.3500, -71.1500, 1950, 0, 1, 45),

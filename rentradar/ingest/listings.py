@@ -49,13 +49,11 @@ def _area_for(row: dict) -> tuple:
     # A valid Boston/Cambridge zip that is simply outside v1 scope -> drop.
     if z.startswith(("021", "022")) or lat is None or lon is None:
         return None, False
-    # Otherwise the zip is wrong for the city (RentCast gave 02720 for some
-    # Cambridge rows): place by coordinates, same city, within 2 km.
-    city = (row.get("city") or "").lower()
-    candidates = {k: v for k, v in config.AREAS.items() if v[1].lower() == city}
-    if not candidates:
-        return None, False
-    guess = nearest_area(lat, lon, candidates)
+    # Otherwise the zip is wrong (RentCast gave 02720 for some Cambridge rows):
+    # place by coordinates within 2 km of one of our areas. RentCast's `city`
+    # is unreliable (Allston, Brighton, Fenway, Brookline, even "Open" appear
+    # for Boston zips), so it is not used as a filter here.
+    guess = nearest_area(lat, lon, config.AREAS)
     _, _, clat, clon = config.AREAS[guess]
     if haversine_m(lat, lon, clat, clon) <= 2000:
         return guess, True
@@ -111,7 +109,9 @@ def load_snapshot(paths: Iterable[Path], today: datetime = None) -> Tuple[List[D
                 "address": r.get("formattedAddress"),
                 "address_line1": r.get("addressLine1"),
                 "unit": r.get("addressLine2"),
-                "city": r.get("city"),
+                # city comes from the zip (Allston/Brighton/Fenway are Boston); RentCast's own label is kept
+                "city": config.AREAS[area_zip][1],
+                "city_raw": r.get("city"),
                 "zip": address.norm_zip(r.get("zipCode")),
                 "area_zip": area_zip,
                 "area": config.AREAS[area_zip][0],

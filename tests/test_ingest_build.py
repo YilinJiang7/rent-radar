@@ -134,3 +134,13 @@ def test_signal_rules():
     assert classify_rule("Street Light Outages", "Civic Maintenance Requests") == "street_public"
     assert classify_rule("something odd", "Housing Complaints") == "living_conditions"
     assert classify_rule("something odd", "") == "other"
+
+
+def test_city_comes_from_zip_not_rentcast_label(store):
+    l = store.listings["FX-2"]  # RentCast says "Allston"
+    assert l["city"] == "Boston" and l["city_raw"] == "Allston"
+    assert store.features["FX-2"]["building"]["available"] is True
+    # and it is inside the Boston-first default scope
+    from rentradar.agent import tools
+    out = tools.rank_listings(store, campus="mit", limit=20)
+    assert "FX-2" in {r["id"] for r in out["results"]}

@@ -31,10 +31,10 @@
   },
   {
    "id": "FX-2",
-   "formattedAddress": "40-42 Sample Ave, Unit 3, Boston, MA 02134",
+   "formattedAddress": "40-42 Sample Ave, Unit 3, Allston, MA 02134",
    "addressLine1": "40-42 Sample Ave",
    "addressLine2": "Unit 3",
-   "city": "Boston",
+   "city": "Allston",
    "state": "MA",
    "zipCode": "02134",
    "latitude": 42.355,

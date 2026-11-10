@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
 
 CREATE TABLE IF NOT EXISTS listings (
     id TEXT PRIMARY KEY,
-    address TEXT, address_line1 TEXT, unit TEXT, city TEXT, zip TEXT,
+    address TEXT, address_line1 TEXT, unit TEXT, city TEXT, city_raw TEXT, zip TEXT,
     area_zip TEXT, area TEXT, zip_corrected INTEGER DEFAULT 0,
     lat REAL, lon REAL,
     price INTEGER, bedrooms REAL, bathrooms REAL, sqft INTEGER,

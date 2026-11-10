@@ -174,8 +174,8 @@ DECLARATIONS = [
             "properties": {
                 "campus": CAMPUS_SCHEMA,
                 "max_price": {"type": "number", "description": "Monthly rent ceiling in USD"},
-                "min_beds": {"type": "number", "description": "Minimum bedrooms (0 = studio)"},
-                "max_beds": {"type": "number"},
+                "min_beds": {"type": "number", "description": "Minimum bedrooms (0 = studio). For an exact count set min_beds and max_beds to the same number."},
+                "max_beds": {"type": "number", "description": "Maximum bedrooms. Set equal to min_beds when the student names an exact count (e.g. '1 bedroom')."},
                 "areas": {"type": "array", "items": {"type": "string"}, "description": "Area names or zip codes, e.g. Allston, 02139"},
                 "max_bike_min": {"type": "number", "description": "Maximum estimated bike minutes to campus"},
                 "include_stale": {"type": "boolean", "description": "Also include older backup listings (91-180 days on market; may be gone). Default false"},
