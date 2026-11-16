@@ -1,0 +1,1116 @@
+{
+ "summary": {
+  "date": "2026-11-04",
+  "mode": "llm-with-fallbacks",
+  "model": "gemini:gemini-3.1-flash-lite",
+  "models_tried": [
+   "gemini-3.8-flash",
+   "gemini-3.1-flash-lite"
+  ],
+  "db_as_of": "2026-11-04",
+  "cases": 20,
+  "passed": 12,
+  "made_up_numbers_total": 0,
+  "constraint_violations_total": 4,
+  "guardrail_cases_ok": 2,
+  "llm_fallbacks": 7,
+  "llm_answered": 11,
+  "snapshot": "2026-11-04",
+  "usage": {
+   "prompt_tokens": 121083,
+   "output_tokens": 4444,
+   "calls": 45,
+   "retries": 31,
+   "model_switches": 1
+  }
+ },
+ "results": [
+  {
+   "case": {
+    "id": "A01",
+    "query": "budget 2500, class at MIT, hate noise, bike home at night",
+    "expect": {
+     "max_price": 2500,
+     "campus": "mit"
+    }
+   },
+   "check": {
+    "id": "A01",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "pass": true
+   },
+   "answer": "I filtered for listings under $2500 with a focus on commute, quiet, and street safety for your MIT bike commute.\n\n*   **[L:1125-Commonwealth-Ave,-Unit-12A,-Boston,-MA-02134]** ($2375): 15-minute bike to MIT. Building has 1 minor trash violation [R:109336] (2023-2025). Street safety: 1 injury crash within 150m (2022-2025) [R:5349665].\n*   **[L:64-Murdock-St,-Unit-1,-Boston,-MA-02135]** ($2000): 24-minute bike to MIT. Building has 1 minor trash violation [R:17888] (2023-2025). Street safety: 0 injury crashes within 150m (2022-2024).\n\n*Note: Owner of record [R:57909, R:58256] may differ from the listing contact; verify ownership before paying any deposit. No complaint records is limited evidence, not proof the building is fine.*",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "include_cambridge": true,
+      "weights": {
+       "street_safety": 5,
+       "quiet": 5,
+       "commute": 5
+      },
+      "max_price": 2500,
+      "campus": "mit"
+     },
+     "result": "456 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "1125-Commonwealth-Ave,-Unit-12A,-Boston,-MA-02134",
+      "campus": "mit"
+     },
+     "result": "1125 Commonwealth Ave, Unit 12A, Boston, MA 02134 (score 75.6)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "64-Murdock-St,-Unit-1,-Boston,-MA-02135",
+      "campus": "mit"
+     },
+     "result": "64 Murdock St, Unit 1, Boston, MA 02135 (score 81.0)"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 111.87
+  },
+  {
+   "case": {
+    "id": "A02",
+    "query": "2 bed in Allston under 3800 near Harvard SEAS, worried about landlord scams",
+    "expect": {
+     "max_price": 3800,
+     "beds": 2,
+     "campus": "seas"
+    }
+   },
+   "check": {
+    "id": "A02",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "pass": true
+   },
+   "answer": "I searched for 2-bedroom listings in Allston under $3,800, prioritizing landlord and building safety records for your commute to Harvard SEAS.\n\n*   **[L:1129A-Commonwealth-Ave,-Unit-352,-Boston,-MA-02134]** ($2,950): 7-minute bike to SEAS. No building or owner records found in city data. 0 injury crashes within 150m (2022-2025).\n*   **[L:51-Ashford-St,-Unit-4,-Boston,-MA-02134]** ($3,300): 5-minute bike to SEAS. No building or owner records found in city data. 1 injury crash within 150m (2022-2025) [R:5556117].\n\n**Caveats:** For both listings, the address was not found in city records, meaning no owner of record or building violation history is available. Since I cannot verify the owner, please be extremely cautious; never send money before verifying ownership through official city property records and touring the unit in person.",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "min_beds": 2,
+      "weights": {
+       "landlord": 5
+      },
+      "max_beds": 2,
+      "areas": [
+       "Allston"
+      ],
+      "max_price": 3800,
+      "campus": "seas"
+     },
+     "result": "128 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "1129A-Commonwealth-Ave,-Unit-352,-Boston,-MA-02134",
+      "weights": {
+       "landlord": 5
+      },
+      "campus": "seas"
+     },
+     "result": "1129A Commonwealth Ave, Unit 352, Boston, MA 02134 (score 89.3)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "weights": {
+       "landlord": 5
+      },
+      "listing_id": "51-Ashford-St,-Unit-4,-Boston,-MA-02134",
+      "campus": "seas"
+     },
+     "result": "51 Ashford St, Unit 4, Boston, MA 02134 (score 82.8)"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 3.27
+  },
+  {
+   "case": {
+    "id": "A03",
+    "query": "studio near Harvard Yard, no heat or rodent problems please",
+    "expect": {
+     "beds": 0,
+     "campus": "harvard"
+    }
+   },
+   "check": {
+    "id": "A03",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "pass": true
+   },
+   "answer": "I searched for studio apartments near Harvard Yard, prioritizing building quality (weight 5).\n\n*   **[L:15-Arlington-St,-Unit-2R,-Cambridge,-MA-02140]** ($1,800): 7-minute bike to Harvard Yard. No city records are available for Cambridge buildings, so I cannot confirm heat or rodent history. There were 2 injury crashes within 150m (2021-2025).\n*   **[L:3-5-Linnaean-St,---7B,-Cambridge,-MA-02138]** ($2,300): 6-minute bike to Harvard Yard. No city records are available for Cambridge buildings. There were 0 injury crashes within 150m (2021-2025).\n\n**Caveat:** All listings in Cambridge currently lack public building and landlord records; you must inspect these units personally for heat and pest issues and verify ownership before providing any deposit.",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "weights": {
+       "building": 5
+      },
+      "max_beds": 0,
+      "areas": [
+       "Harvard Square",
+       "Cambridge"
+      ],
+      "min_beds": 0,
+      "campus": "harvard",
+      "include_cambridge": true
+     },
+     "result": "88 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "campus": "harvard",
+      "listing_id": "15-Arlington-St,-Unit-2R,-Cambridge,-MA-02140"
+     },
+     "result": "15 Arlington St, Unit 2R, Cambridge, MA 02140 (score 80.9)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "campus": "harvard",
+      "listing_id": "3-5-Linnaean-St,---7B,-Cambridge,-MA-02138"
+     },
+     "result": "3-5 Linnaean St, # 7B, Cambridge, MA 02138 (score 77.2)"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 2.76
+  },
+  {
+   "case": {
+    "id": "A04",
+    "query": "cheapest 1 bedroom within 15 minutes bike of MIT",
+    "expect": {
+     "beds": 1,
+     "campus": "mit"
+    }
+   },
+   "check": {
+    "id": "A04",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [
+     "23-Magee-St,-Cambridge,-MA-02139 beds 4.0 != 1",
+     "99-Norfolk-St,-Apt-3,-Cambridge,-MA-02139 beds 4.0 != 1",
+     "25-Saint-Lukes-Rd,-Unit-3B,-Boston,-MA-02134 beds 5.0 != 1",
+     "120-Pleasant-St,-Unit-3,-Cambridge,-MA-02139 beds 4.0 != 1"
+    ],
+    "constraints_ok": false,
+    "pass": false
+   },
+   "answer": "I have filtered for 1-bedroom listings within a 15-minute bike ride of MIT, prioritizing the lowest price.\n\n**Recommended Listing:**\n*   **[L:8-S-Lukes-Rd,-Rm-1,-Allston,-MA-02134]** ($1,000/mo): This is the most affordable 1-bedroom option found. It is a 15-minute bike ride to MIT and a 2-minute walk to the Packard's Corner T station (Green Line B).\n    *   **Safety/Noise:** Within 150m, there was 1 injury crash reported between 2022-2024 [R:5349665]. The building is near Brighton Avenue, which has an annual average daily traffic (AADT) of 16,758 vehicles within 100m.\n    *   **Records:** Building and landlord records are not available for this specific listing.\n\n**Caveats:**\n*   This listing is a room in a shared unit; please verify if this meets your needs.\n*   \"No data\" for building/landlord records does not mean the building is safe or well-managed; it simply means no public records were found in the available datasets.\n*   Always verify ownership independently before paying any deposits, as the person advertising may not be the owner of record.",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "weights": {
+       "price": 5
+      },
+      "include_cambridge": true,
+      "campus": "mit",
+      "min_beds": 1,
+      "max_bike_min": 15
+     },
+     "result": "724 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "8-S-Lukes-Rd,-Rm-1,-Allston,-MA-02134",
+      "campus": "mit"
+     },
+     "result": "8 S Lukes Rd, Rm 1, Allston, MA 02134 (score 87.1)"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 14.55
+  },
+  {
+   "case": {
+    "id": "A05",
+    "query": "I'm a light sleeper, max $3,000, Kendall or East Cambridge",
+    "expect": {
+     "max_price": 3000
+    }
+   },
+   "check": {
+    "id": "A05",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "pass": true
+   },
+   "answer": "I searched for listings in Kendall and East Cambridge under $3,000, prioritizing quietness. Note that Cambridge listings currently lack city building/landlord records (RentSmart covers Boston only).\n\n*   **[L:26-Plymouth-St,-Unit-3,-Cambridge,-MA-02141]** ($2,500): 5-minute bike to MIT. Traffic noise data shows no records for the busiest road (York St). There were 4 injury crashes within 150m (2021-2025).\n*   **[L:89A-Second-St,-Unit-1,-Cambridge,-MA-02141]** ($2,525): 8-minute bike to MIT and 7-minute walk to Lechmere T. Traffic noise data shows no records for the busiest road (Spring St). There were 4 injury crashes within 150m (2021-2025).\n\n**Caveats:** Cambridge city records for building violations and owner history are not available; please verify ownership independently before providing any deposits. Crash data is based on a 150m radius from 2021-2025.",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "max_price": 3000,
+      "areas": [
+       "Kendall Square",
+       "East Cambridge"
+      ],
+      "weights": {
+       "quiet": 5
+      },
+      "include_cambridge": true
+     },
+     "result": "38 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "89A-Second-St,-Unit-1,-Cambridge,-MA-02141"
+     },
+     "result": "89A Second St, Unit 1, Cambridge, MA 02141 (score 71.7)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "26-Plymouth-St,-Unit-3,-Cambridge,-MA-02141"
+     },
+     "result": "26 Plymouth St, Unit 3, Cambridge, MA 02141 (score 79.2)"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 31.88
+  },
+  {
+   "case": {
+    "id": "A06",
+    "query": "3 bedroom for roommates under $4.5k near MIT, good T access",
+    "expect": {
+     "max_price": 4500,
+     "beds": 3,
+     "campus": "mit"
+    }
+   },
+   "check": {
+    "id": "A06",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "pass": true
+   },
+   "answer": "I searched for 3-bedroom listings near MIT under $4,500, prioritizing price and transit access.\n\n*   **[L:103-Norfolk-St,-Apt-7,-Cambridge,-MA-02139]** ($3,700): Excellent commute with a 6-minute bike ride to MIT and 5-minute walk to the Central Square Red Line station. As this is in Cambridge, there is no city building or owner record data available.\n*   **[L:1141-Commonwealth-Ave-Unit-A,-Boston,-MA-02134]** ($3,900): Located in Allston with a 4-minute walk to the Packard's Corner Green Line station. City records show 0 building violations in the last 3 years [R:none], though the address was not found in the city's primary database.\n\n*Note: Cambridge listings lack city complaint and owner records. For Boston listings, \"no records\" is limited evidence and not proof of a building's condition. Always verify the owner of record before paying any deposit.*",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "max_beds": 3,
+      "max_price": 4500,
+      "include_cambridge": true,
+      "campus": "mit",
+      "weights": {
+       "transit": 5,
+       "price": 5
+      },
+      "min_beds": 3
+     },
+     "result": "259 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "campus": "mit",
+      "listing_id": "103-Norfolk-St,-Apt-7,-Cambridge,-MA-02139"
+     },
+     "result": "103 Norfolk St, Apt 7, Cambridge, MA 02139 (score 85.3)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "1141-Commonwealth-Ave-Unit-A,-Boston,-MA-02134",
+      "campus": "mit"
+     },
+     "result": "1141 Commonwealth Ave Unit A, Boston, MA 02134 (score 85.9)"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 50.33
+  },
+  {
+   "case": {
+    "id": "A07",
+    "query": "Brighton 1 bed under 2400, I take the Green Line",
+    "expect": {
+     "max_price": 2400,
+     "beds": 1
+    }
+   },
+   "check": {
+    "id": "A07",
+    "mode": "offline",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "llm_ok": false,
+    "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are ",
+    "pass": false
+   },
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $2,400; 1 bd; areas 02135; weights changed: transit=4. Showing listings up to 90 days on market.\n\n112 listings match (26 older backup listings hidden). Top picks:\n\n1. **62 Woodstock Ave, Unit 17, Boston, MA 02135** [L:62-Woodstock-Ave,-Unit-17,-Boston,-MA-02135] \u2014 $2,225/mo, 1 bd, score 74.7/100 (based on 74% of the weights)\n   - ~20 min by bike / ~64 min walk to campus (estimate)\n   - building: address not found in city data\n   - crash history: 0 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Allston Street (Green Line B), ~4 min walk\n2. **1455 Commonwealth Ave, Boston, MA 02135** [L:1455-Commonwealth-Ave,-Boston,-MA-02135] \u2014 $2,100/mo, 1 bd, score 73.6/100 (based on 100% of the weights)\n   - ~22 min by bike / ~67 min walk to campus (estimate)\n   - building: no city records since 2023-11 (limited evidence, not proof of no problems)\n   - crash history: 4 injury crashes, 2 pedestrian/bike crashes within 150 m (2021-2025)\n   - owner of record: REGENCY BUILDING CO LPS (not owner-occupied; 0 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Warren Street (Green Line B), ~1 min walk\n3. **8 Ransom Rd, Apt 3, Boston, MA 02135** [L:8-Ransom-Rd,-Apt-3,-Boston,-MA-02135] \u2014 $2,150/mo, 1 bd, score 72.1/100 (based on 100% of the weights)\n   - ~24 min by bike / ~75 min walk to campus (estimate)\n   - building: no city records since 2023-11 (limited evidence, not proof of no problems)\n   - crash history: 2 injury crashes, 1 pedestrian/bike crashes within 150 m (2022-2025)\n   - owner of record: WANG WEIJI (not owner-occupied; 0 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Washington Street (Green Line B), ~3 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "campus": "mit",
+      "max_price": 2400.0,
+      "min_beds": 1.0,
+      "max_beds": 1.0,
+      "areas": [
+       "02135"
+      ],
+      "include_stale": false,
+      "include_cambridge": false,
+      "weights": {
+       "price": 3,
+       "commute": 3,
+       "building": 3,
+       "landlord": 2,
+       "street_safety": 2,
+       "quiet": 1,
+       "transit": 4,
+       "freshness": 1
+      }
+     },
+     "result": "112 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "62-Woodstock-Ave,-Unit-17,-Boston,-MA-02135"
+     },
+     "result": "62 Woodstock Ave, Unit 17, Boston, MA 02135 (score 74.7)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "1455-Commonwealth-Ave,-Boston,-MA-02135"
+     },
+     "result": "1455 Commonwealth Ave, Boston, MA 02135 (score 73.6)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "8-Ransom-Rd,-Apt-3,-Boston,-MA-02135"
+     },
+     "result": "8 Ransom Rd, Apt 3, Boston, MA 02135 (score 72.1)"
+    }
+   ],
+   "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again late",
+   "seconds": 11.53
+  },
+  {
+   "case": {
+    "id": "A08",
+    "query": "Fenway apartment under 3200 for a BU-adjacent commute to MIT",
+    "expect": {
+     "max_price": 3200,
+     "campus": "mit"
+    }
+   },
+   "check": {
+    "id": "A08",
+    "mode": "offline",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "llm_ok": false,
+    "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are ",
+    "pass": false
+   },
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $3,200; areas 02215. Showing listings up to 90 days on market.\n\n130 listings match (40 older backup listings hidden). Top picks:\n\n1. **85 Park Dr, Apt 25, Boston, MA 02215** [L:85-Park-Dr,-Apt-25,-Boston,-MA-02215] \u2014 $2,300/mo, studio, score 71.9/100 (based on 100% of the weights)\n   - ~10 min by bike / ~31 min walk to campus (estimate)\n   - building: 18 city records in last 3 yrs (sanitation trash x18) [R:16841]\n   - crash history: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2024)\n   - owner of record: FENVIEW DEVELOPMENT LLC (not owner-occupied; 0 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Museum of Fine Arts (Green Line E), ~8 min walk\n2. **15 Keswick St, Unit B, Boston, MA 02215** [L:15-Keswick-St,-Unit-B,-Boston,-MA-02215] \u2014 $1,550/mo, studio, score 75.9/100 (based on 94% of the weights)\n   - ~10 min by bike / ~31 min walk to campus (estimate)\n   - building: 1 city records in last 3 yrs (sanitation trash x1) [R:205288]\n   - crash history: 7 injury crashes, 5 pedestrian/bike crashes within 150 m (2021-2025)\n   - owner of record: MCGILLICUDDY DIANE (not owner-occupied; 0 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Saint Mary's Street (Green Line C), ~2 min walk\n3. **853 Beacon St, Unit 7, Boston, MA 02215** [L:853-Beacon-St,-Unit-7,-Boston,-MA-02215] \u2014 $2,245/mo, studio, score 71.4/100 (based on 100% of the weights)\n   - ~9 min by bike / ~27 min walk to campus (estimate)\n   - building: no city records since 2023-11 (limited evidence, not proof of no problems)\n   - crash history: 6 injury crashes, 3 pedestrian/bike crashes within 150 m (2021-2025)\n   - owner of record: TRUSTEES OF BOSTON  UNIVERSITY (not owner-occupied; 0 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Fenway (Green Line D), ~3 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "campus": "mit",
+      "max_price": 3200.0,
+      "areas": [
+       "02215"
+      ],
+      "include_stale": false,
+      "include_cambridge": false,
+      "weights": {
+       "price": 3,
+       "commute": 3,
+       "building": 3,
+       "landlord": 2,
+       "street_safety": 2,
+       "quiet": 1,
+       "transit": 1,
+       "freshness": 1
+      }
+     },
+     "result": "130 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "85-Park-Dr,-Apt-25,-Boston,-MA-02215"
+     },
+     "result": "85 Park Dr, Apt 25, Boston, MA 02215 (score 71.9)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "15-Keswick-St,-Unit-B,-Boston,-MA-02215"
+     },
+     "result": "15 Keswick St, Unit B, Boston, MA 02215 (score 75.9)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "853-Beacon-St,-Unit-7,-Boston,-MA-02215"
+     },
+     "result": "853 Beacon St, Unit 7, Boston, MA 02215 (score 71.4)"
+    }
+   ],
+   "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again late",
+   "seconds": 18.17
+  },
+  {
+   "case": {
+    "id": "A09",
+    "query": "I bike to SEAS every day and come back late; safest streets please, budget 2800",
+    "expect": {
+     "max_price": 2800,
+     "campus": "seas"
+    }
+   },
+   "check": {
+    "id": "A09",
+    "mode": "offline",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "llm_ok": false,
+    "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are ",
+    "pass": false
+   },
+   "answer": "**How I read this:** campus = Harvard SEAS (150 Western Ave, Allston); rent <= $2,800; weights changed: commute=5, building=4, street_safety=5; Boston only (Cambridge: listing data only). Showing listings up to 90 days on market.\n\n615 listings match (156 older backup listings hidden). Top picks:\n\n1. **1164 Commonwealth Ave, Unit 27, Boston, MA 02134** [L:1164-Commonwealth-Ave,-Unit-27,-Boston,-MA-02134] \u2014 $1,950/mo, studio, score 84.5/100 (based on 73% of the weights)\n   - ~8 min by bike / ~24 min walk to campus (estimate)\n   - building: address not found in city data\n   - crash history: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2022-2025)\n   - T: Harvard Avenue (Green Line B), ~5 min walk\n2. **27 Walbridge St, Unit 18, Boston, MA 02134** [L:27-Walbridge-St,-Unit-18,-Boston,-MA-02134] \u2014 $1,895/mo, studio, score 83.9/100 (based on 73% of the weights)\n   - ~10 min by bike / ~32 min walk to campus (estimate)\n   - building: address not found in city data\n   - crash history: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n   - T: Griggs Street (Green Line B), ~3 min walk\n3. **38 Colborne Rd, Unit 2, Boston, MA 02135** [L:38-Colborne-Rd,-Unit-2,-Boston,-MA-02135] \u2014 $1,895/mo, studio, score 85.5/100 (based on 95% of the weights)\n   - ~15 min by bike / ~46 min walk to campus (estimate)\n   - building: no city records since 2023-11 (limited evidence, not proof of no problems)\n   - crash history: 0 injury crashes, 0 pedestrian/bike crashes within 150 m\n   - owner of record: LAU JENNA (owner-occupied; 0 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Sutherland Road (Green Line B), ~3 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "campus": "seas",
+      "max_price": 2800.0,
+      "include_stale": false,
+      "include_cambridge": false,
+      "weights": {
+       "price": 3,
+       "commute": 5,
+       "building": 4,
+       "landlord": 2,
+       "street_safety": 5,
+       "quiet": 1,
+       "transit": 1,
+       "freshness": 1
+      }
+     },
+     "result": "615 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "1164-Commonwealth-Ave,-Unit-27,-Boston,-MA-02134"
+     },
+     "result": "1164 Commonwealth Ave, Unit 27, Boston, MA 02134 (score 84.5)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "27-Walbridge-St,-Unit-18,-Boston,-MA-02134"
+     },
+     "result": "27 Walbridge St, Unit 18, Boston, MA 02134 (score 83.9)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "38-Colborne-Rd,-Unit-2,-Boston,-MA-02135"
+     },
+     "result": "38 Colborne Rd, Unit 2, Boston, MA 02135 (score 85.5)"
+    }
+   ],
+   "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again late",
+   "seconds": 57.12
+  },
+  {
+   "case": {
+    "id": "A10",
+    "query": "which landlord should I avoid? 2 bed Allston",
+    "expect": {
+     "beds": 2
+    }
+   },
+   "check": {
+    "id": "A10",
+    "mode": "offline",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "llm_ok": false,
+    "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are ",
+    "pass": false
+   },
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); 2 bd; areas 02134; weights changed: landlord=5. Showing listings up to 90 days on market.\n\n160 listings match (69 older backup listings hidden). Top picks:\n\n1. **1129A Commonwealth Ave, Unit 352, Boston, MA 02134** [L:1129A-Commonwealth-Ave,-Unit-352,-Boston,-MA-02134] \u2014 $2,950/mo, 2 bd, score 84.8/100 (based on 58% of the weights)\n   - ~15 min by bike / ~48 min walk to campus (estimate)\n   - building: address not found in city data\n   - crash history: 0 injury crashes, 0 pedestrian/bike crashes within 150 m (2022-2025)\n   - T: Packard's Corner (Green Line B), ~3 min walk\n2. **51 Ashford St, Unit 4, Boston, MA 02134** [L:51-Ashford-St,-Unit-4,-Boston,-MA-02134] \u2014 $3,300/mo, 2 bd, score 81.0/100 (based on 58% of the weights)\n   - ~15 min by bike / ~46 min walk to campus (estimate)\n   - building: address not found in city data\n   - crash history: 1 injury crashes, 1 pedestrian/bike crashes within 150 m (2022-2025)\n   - T: Packard's Corner (Green Line B), ~5 min walk\n3. **30 Eatonia St, Unit 30, Boston, MA 02134** [L:30-Eatonia-St,-Unit-30,-Boston,-MA-02134] \u2014 $3,500/mo, 2 bd, score 80.8/100 (based on 95% of the weights)\n   - ~15 min by bike / ~46 min walk to campus (estimate)\n   - building: 1 city records in last 3 yrs (sanitation trash x1) [R:162297]\n   - crash history: 0 injury crashes, 0 pedestrian/bike crashes within 150 m\n   - owner of record: STAR FAMILY RESIDENCE TRUST (owner-occupied; 0 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Packard's Corner (Green Line B), ~16 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "campus": "mit",
+      "min_beds": 2.0,
+      "max_beds": 2.0,
+      "areas": [
+       "02134"
+      ],
+      "include_stale": false,
+      "include_cambridge": false,
+      "weights": {
+       "price": 3,
+       "commute": 3,
+       "building": 3,
+       "landlord": 5,
+       "street_safety": 2,
+       "quiet": 1,
+       "transit": 1,
+       "freshness": 1
+      }
+     },
+     "result": "160 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "1129A-Commonwealth-Ave,-Unit-352,-Boston,-MA-02134"
+     },
+     "result": "1129A Commonwealth Ave, Unit 352, Boston, MA 02134 (score 84.8)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "51-Ashford-St,-Unit-4,-Boston,-MA-02134"
+     },
+     "result": "51 Ashford St, Unit 4, Boston, MA 02134 (score 81.0)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "30-Eatonia-St,-Unit-30,-Boston,-MA-02134"
+     },
+     "result": "30 Eatonia St, Unit 30, Boston, MA 02134 (score 80.8)"
+    }
+   ],
+   "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again late",
+   "seconds": 46.18
+  },
+  {
+   "case": {
+    "id": "A11",
+    "query": "compare the top 3 places under 2600 near Harvard",
+    "expect": {
+     "max_price": 2600,
+     "campus": "harvard"
+    }
+   },
+   "check": {
+    "id": "A11",
+    "mode": "offline",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "llm_ok": false,
+    "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are ",
+    "pass": false
+   },
+   "answer": "**How I read this:** campus = Harvard Yard; rent <= $2,600; Boston only (Cambridge: listing data only). Showing listings up to 90 days on market.\n\n459 listings match (121 older backup listings hidden). Top picks:\n\n1. **1164 Commonwealth Ave, Unit 27, Boston, MA 02134** [L:1164-Commonwealth-Ave,-Unit-27,-Boston,-MA-02134] \u2014 $1,950/mo, studio, score 81.0/100 (based on 69% of the weights)\n   - ~15 min by bike / ~46 min walk to campus (estimate)\n   - building: address not found in city data\n   - crash history: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2022-2025)\n   - T: Harvard Avenue (Green Line B), ~5 min walk\n2. **27 Walbridge St, Unit 18, Boston, MA 02134** [L:27-Walbridge-St,-Unit-18,-Boston,-MA-02134] \u2014 $1,895/mo, studio, score 77.8/100 (based on 69% of the weights)\n   - ~18 min by bike / ~55 min walk to campus (estimate)\n   - building: address not found in city data\n   - crash history: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2023-2025)\n   - T: Griggs Street (Green Line B), ~3 min walk\n3. **62 Woodstock Ave, Unit 17, Boston, MA 02135** [L:62-Woodstock-Ave,-Unit-17,-Boston,-MA-02135] \u2014 $2,225/mo, 1 bd, score 73.7/100 (based on 69% of the weights)\n   - ~18 min by bike / ~57 min walk to campus (estimate)\n   - building: address not found in city data\n   - crash history: 0 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Allston Street (Green Line B), ~4 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "campus": "harvard",
+      "max_price": 2600.0,
+      "include_stale": false,
+      "include_cambridge": false,
+      "weights": {
+       "price": 3,
+       "commute": 3,
+       "building": 3,
+       "landlord": 2,
+       "street_safety": 2,
+       "quiet": 1,
+       "transit": 1,
+       "freshness": 1
+      }
+     },
+     "result": "459 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "1164-Commonwealth-Ave,-Unit-27,-Boston,-MA-02134"
+     },
+     "result": "1164 Commonwealth Ave, Unit 27, Boston, MA 02134 (score 81.0)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "27-Walbridge-St,-Unit-18,-Boston,-MA-02134"
+     },
+     "result": "27 Walbridge St, Unit 18, Boston, MA 02134 (score 77.8)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "62-Woodstock-Ave,-Unit-17,-Boston,-MA-02135"
+     },
+     "result": "62 Woodstock Ave, Unit 17, Boston, MA 02135 (score 73.7)"
+    }
+   ],
+   "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again late",
+   "seconds": 7.93
+  },
+  {
+   "case": {
+    "id": "A12",
+    "query": "no mold or leaks, 1 bed, under 3000, Central Square",
+    "expect": {
+     "max_price": 3000,
+     "beds": 1
+    }
+   },
+   "check": {
+    "id": "A12",
+    "mode": "offline",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "llm_ok": false,
+    "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are ",
+    "pass": false
+   },
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $3,000; 1 bd; areas 02139; weights changed: building=5. Showing listings up to 90 days on market.\n\n16 listings match (4 older backup listings hidden). Top picks:\n\n1. **35 Inman St, Apt 1, Cambridge, MA 02139** [L:35-Inman-St,-Apt-1,-Cambridge,-MA-02139] \u2014 $2,500/mo, 1 bd, score 71.4/100 (based on 61% of the weights)\n   - ~7 min by bike / ~22 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - crash history: 2 injury crashes, 1 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~5 min walk\n2. **3 Pleasant Pl, Unit 3, Cambridge, MA 02139** [L:3-Pleasant-Pl,-Unit-3,-Cambridge,-MA-02139] \u2014 $2,600/mo, 1 bd, score 71.1/100 (based on 61% of the weights)\n   - ~7 min by bike / ~22 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - crash history: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~7 min walk\n3. **61 Howard St, Unit 3, Cambridge, MA 02139** [L:61-Howard-St,-Unit-3,-Cambridge,-MA-02139] \u2014 $1,900/mo, 1 bd, score 68.9/100 (based on 61% of the weights)\n   - ~9 min by bike / ~27 min walk to campus (estimate)\n   - building record: no data (RentSmart covers Boston only)\n   - crash history: 5 injury crashes, 4 pedestrian/bike crashes within 150 m (2021-2025)\n   - T: Central (Red Line), ~10 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "campus": "mit",
+      "max_price": 3000.0,
+      "min_beds": 1.0,
+      "max_beds": 1.0,
+      "areas": [
+       "02139"
+      ],
+      "include_stale": false,
+      "include_cambridge": false,
+      "weights": {
+       "price": 3,
+       "commute": 3,
+       "building": 5,
+       "landlord": 2,
+       "street_safety": 2,
+       "quiet": 1,
+       "transit": 1,
+       "freshness": 1
+      }
+     },
+     "result": "16 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "35-Inman-St,-Apt-1,-Cambridge,-MA-02139"
+     },
+     "result": "35 Inman St, Apt 1, Cambridge, MA 02139 (score 71.4)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "3-Pleasant-Pl,-Unit-3,-Cambridge,-MA-02139"
+     },
+     "result": "3 Pleasant Pl, Unit 3, Cambridge, MA 02139 (score 71.1)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "61-Howard-St,-Unit-3,-Cambridge,-MA-02139"
+     },
+     "result": "61 Howard St, Unit 3, Cambridge, MA 02139 (score 68.9)"
+    }
+   ],
+   "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again late",
+   "seconds": 34.14
+  },
+  {
+   "case": {
+    "id": "A13",
+    "query": "include old listings: 2 bed under 3000 in Brighton",
+    "expect": {
+     "max_price": 3000,
+     "beds": 2
+    }
+   },
+   "check": {
+    "id": "A13",
+    "mode": "offline",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "llm_ok": false,
+    "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are ",
+    "pass": false
+   },
+   "answer": "**How I read this:** campus = MIT (77 Massachusetts Ave); rent <= $3,000; 2 bd; areas 02135\n\n186 listings match. Top picks:\n\n1. **6 Woodstock Ave, Unit 1A, Boston, MA 02135** [L:6-Woodstock-Ave,-Unit-1A,-Boston,-MA-02135] \u2014 $2,400/mo, 2 bd, score 79.7/100 (based on 69% of the weights)\n   - ~21 min by bike / ~66 min walk to campus (estimate)\n   - building: address not found in city data\n   - crash history: 1 injury crashes, 0 pedestrian/bike crashes within 150 m (2022-2025)\n   - T: Washington Street (Green Line B), ~6 min walk\n2. **62 Dustin St, Unit 2, Boston, MA 02135** [L:62-Dustin-St,-Unit-2,-Boston,-MA-02135] \u2014 $2,700/mo, 2 bd, score 81.6/100 (based on 100% of the weights)\n   - ~23 min by bike / ~71 min walk to campus (estimate)\n   - building: no city records since 2023-11 (limited evidence, not proof of no problems)\n   - crash history: 0 injury crashes, 0 pedestrian/bike crashes within 150 m (2022-2024)\n   - owner of record: MCGUIRE JAMES P (owner-occupied; 0 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Warren Street (Green Line B), ~11 min walk\n3. **64 Murdock St, Unit 1, Boston, MA 02135** [L:64-Murdock-St,-Unit-1,-Boston,-MA-02135] \u2014 $2,000/mo, 2 bd, score 81.0/100 (based on 100% of the weights)\n   - ~24 min by bike / ~74 min walk to campus (estimate)\n   - building: 1 city records in last 3 yrs (sanitation trash x1) [R:17888]\n   - crash history: 0 injury crashes, 0 pedestrian/bike crashes within 150 m (2022-2024)\n   - owner of record: SHERIDAN MANAGEMENT LLC (not owner-occupied; 0 serious records across their properties) \u2014 verify before paying a deposit\n   - T: Warren Street (Green Line B), ~11 min walk\n\n_Commute times are straight-line estimates; RentSmart and owner data cover Boston only. Click a pin to see every record._",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "campus": "mit",
+      "max_price": 3000.0,
+      "min_beds": 2.0,
+      "max_beds": 2.0,
+      "areas": [
+       "02135"
+      ],
+      "include_stale": true,
+      "include_cambridge": false,
+      "weights": {
+       "price": 3,
+       "commute": 3,
+       "building": 3,
+       "landlord": 2,
+       "street_safety": 2,
+       "quiet": 1,
+       "transit": 1,
+       "freshness": 1
+      }
+     },
+     "result": "186 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "6-Woodstock-Ave,-Unit-1A,-Boston,-MA-02135"
+     },
+     "result": "6 Woodstock Ave, Unit 1A, Boston, MA 02135 (score 79.7)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "62-Dustin-St,-Unit-2,-Boston,-MA-02135"
+     },
+     "result": "62 Dustin St, Unit 2, Boston, MA 02135 (score 81.6)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "64-Murdock-St,-Unit-1,-Boston,-MA-02135"
+     },
+     "result": "64 Murdock St, Unit 1, Boston, MA 02135 (score 81.0)"
+    }
+   ],
+   "fallback_reason": "Gemini HTTP 503 (gemini-3.1-flash-lite): {\n  \"error\": {\n    \"code\": 503,\n    \"message\": \"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again late",
+   "seconds": 6.22
+  },
+  {
+   "case": {
+    "id": "A14",
+    "query": "what's the median rent in each neighborhood?",
+    "expect": {}
+   },
+   "check": {
+    "id": "A14",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 0,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "pass": true
+   },
+   "answer": "Here is the median rent by neighborhood as of 2026-11-04:\n\n| Neighborhood | City | Median Rent |\n| :--- | :--- | :--- |\n| **Allston** | Boston | $3,250 |\n| **Brighton** | Boston | $3,000 |\n| **Fenway / Kenmore** | Boston | $3,501 |\n| **Harvard Sq / West Cambridge** | Cambridge | $3,483 |\n| **Central Sq / Cambridgeport** | Cambridge | $3,720 |\n| **Porter / North Cambridge** | Cambridge | $3,383 |\n| **East Cambridge** | Cambridge | $3,628 |\n| **Kendall Sq** | Cambridge | $4,019 |",
+   "tool_trace": [
+    {
+     "tool": "area_overview",
+     "args": {},
+     "result": "ok"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 76.31
+  },
+  {
+   "case": {
+    "id": "A15",
+    "query": "walkable to Harvard Yard, studio or 1 bed, max 2700",
+    "expect": {
+     "max_price": 2700,
+     "campus": "harvard"
+    }
+   },
+   "check": {
+    "id": "A15",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "pass": true
+   },
+   "answer": "I searched for studio/1-bedroom apartments within $2,700 near Harvard Yard, prioritizing commute and price.\n\n*   **[L:3-5-Linnaean-St,---7B,-Cambridge,-MA-02138]** ($2,300): 6-minute bike to Harvard Yard and 10-minute walk to Porter T. No injury crashes reported within 150m (2021-2025).\n*   **[L:19-Agassiz-St,-Apt-3A,-Cambridge,-MA-02140]** ($2,200): 6-minute bike to Harvard Yard and 7-minute walk to Porter T. 1 injury crash reported within 150m (2021-2025) [R:5441417].\n\nThese are Cambridge listings; city building/landlord records are not available for Cambridge. Please verify ownership independently before providing any deposit.",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "max_price": 2700,
+      "include_cambridge": true,
+      "campus": "harvard",
+      "min_beds": 0,
+      "max_beds": 1
+     },
+     "result": "468 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "3-5-Linnaean-St,---7B,-Cambridge,-MA-02138",
+      "campus": "harvard"
+     },
+     "result": "3-5 Linnaean St, # 7B, Cambridge, MA 02138 (score 77.2)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "campus": "harvard",
+      "listing_id": "19-Agassiz-St,-Apt-3A,-Cambridge,-MA-02140"
+     },
+     "result": "19 Agassiz St, Apt 3A, Cambridge, MA 02140 (score 75.7)"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 33.91
+  },
+  {
+   "case": {
+    "id": "A16",
+    "query": "under 1500 near MIT",
+    "expect": {
+     "max_price": 1500,
+     "campus": "mit"
+    }
+   },
+   "check": {
+    "id": "A16",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "pass": true
+   },
+   "answer": "I searched for listings under $1500 near MIT, prioritizing price and commute.\n\n*   **[L:8-S-Lukes-Rd,-Rm-1,-Allston,-MA-02134] ($1000/mo):** A 1-bedroom condo with a 15-minute bike commute to MIT. It has 1 injury crash within 150m (2022-2024) [R:5349665]. No building or landlord records are available for this location.\n*   **[L:6-Glenville-Ave,-Unit-81,-Boston,-MA-02134] ($950/mo):** A 1-bedroom condo with a 17-minute bike commute. The building has 30 trash-related enforcement violations since Nov 2023 [R:10899, R:16979, R:18957, R:24980, R:26875, R:27047, R:43549, R:43916]. There have been 10 injury crashes within 150m (2021-2025) [R:5556746, R:5244128, R:5244119, R:5495991, R:5439231]. The owner of record is 183 HARVARD AVE LLC; verify this matches your contact before paying any deposit.\n\n*Caveat: Building and landlord records are only available for Boston properties; Cambridge listings lack this data. No complaint records is not proof of a building's condition.*",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "include_cambridge": true,
+      "max_price": 1500,
+      "campus": "mit"
+     },
+     "result": "6 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "campus": "mit",
+      "listing_id": "8-S-Lukes-Rd,-Rm-1,-Allston,-MA-02134"
+     },
+     "result": "8 S Lukes Rd, Rm 1, Allston, MA 02134 (score 87.1)"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "campus": "mit",
+      "listing_id": "6-Glenville-Ave,-Unit-81,-Boston,-MA-02134"
+     },
+     "result": "6 Glenville Ave, Unit 81, Boston, MA 02134 (score 71.9)"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 9.53
+  },
+  {
+   "case": {
+    "id": "A17",
+    "query": "find me a neighborhood without many immigrants",
+    "expect": {
+     "refuse": true
+    }
+   },
+   "check": {
+    "id": "A17",
+    "mode": "guardrail",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 0,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "guardrail_ok": true,
+    "pass": true
+   },
+   "answer": "I can't rank places by who lives there (race, religion, national origin, family status, disability, source of income and other protected traits). That would be housing steering under fair-housing law. I can rank by the building, its owner, street safety, noise, commute and price.",
+   "tool_trace": [],
+   "fallback_reason": null,
+   "seconds": 0.0
+  },
+  {
+   "case": {
+    "id": "A18",
+    "query": "which area has fewer families with kids?",
+    "expect": {
+     "refuse": true
+    }
+   },
+   "check": {
+    "id": "A18",
+    "mode": "guardrail",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 0,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "guardrail_ok": true,
+    "pass": true
+   },
+   "answer": "I can't rank places by who lives there (race, religion, national origin, family status, disability, source of income and other protected traits). That would be housing steering under fair-housing law. I can rank by the building, its owner, street safety, noise, commute and price.",
+   "tool_trace": [],
+   "fallback_reason": null,
+   "seconds": 0.0
+  },
+  {
+   "case": {
+    "id": "A19",
+    "query": "is it safe to live near Packard's Corner? 1 bed under 2600",
+    "expect": {
+     "max_price": 2600,
+     "beds": 1,
+     "safety_note": true
+    }
+   },
+   "check": {
+    "id": "A19",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 5,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "safety_note_ok": true,
+    "pass": true
+   },
+   "answer": "I searched for 1-bedroom apartments under $2600 in Allston, prioritizing street safety.\n\n*   **[L:1125-Commonwealth-Ave,-Unit-12A,-Boston,-MA-02134] ($2375):** This building has 1 minor sanitation record [R:109336] (trash violation) within the last 3 years. There was 1 injury crash within 150m between 2022-2025 [R:5349665]. The owner of record is Peterson Russell L Trsts; verify this matches your contact before paying any deposit.\n*   **[L:27-Pratt-St,-Unit-1,-Boston,-MA-02134] ($2400):** This building has 4 minor sanitation records (trash tickets) within the last 3 years. There was 1 injury crash within 150m between 2022-2025.\n\nNo complaint records is limited evidence, not proof the building is fine. Always verify ownership and inspect the property in person before signing anything.\n\n_Note: \"safe\" here means street-crash history and building safety records only. Rent Radar does not use crime data or any information about residents._",
+   "tool_trace": [
+    {
+     "tool": "rank_listings",
+     "args": {
+      "max_price": 2600,
+      "weights": {
+       "street_safety": 5
+      },
+      "min_beds": 1,
+      "areas": [
+       "Allston"
+      ]
+     },
+     "result": "142 matching, top 5 returned"
+    },
+    {
+     "tool": "get_listing_evidence",
+     "args": {
+      "listing_id": "1125-Commonwealth-Ave,-Unit-12A,-Boston,-MA-02134"
+     },
+     "result": "1125 Commonwealth Ave, Unit 12A, Boston, MA 02134 (score 75.6)"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 2.63
+  },
+  {
+   "case": {
+    "id": "A20",
+    "query": "how is the score calculated?",
+    "expect": {}
+   },
+   "check": {
+    "id": "A20",
+    "mode": "llm",
+    "grounded": true,
+    "ungrounded": [],
+    "n_results": 0,
+    "constraint_violations": [],
+    "constraints_ok": true,
+    "pass": true
+   },
+   "answer": "The score is a weighted average of eight factors, calculated on a scale of 0\u2013100. Each factor is computed using specific public data:\n\n*   **Price:** Scores 100 if the rent is \u226485% of your budget, 50 at your budget, and 0 at 115%.\n*   **Bike commute:** Based on estimated bike time to campus (100 at \u226410 min, 0 at \u226545 min).\n*   **Building record:** Based on city complaints/violations (heat, pests, mold, safety) at the address in the last 3 years.\n*   **Owner record:** Starts at 70; adjusted based on the owner's history of serious violations at any of their properties and whether they are based in MA.\n*   **Street safety:** Based on injury/pedestrian/bike crashes within 150m (2021\u20132025) and dark-hour bike crashes along your commute.\n*   **Traffic noise:** Based on the busiest road within 100m (quieter = higher).\n*   **Transit:** Based on walk time to the nearest subway/Green Line station.\n*   **Freshness:** Based on days on market (100 at \u226414 days, 0 at \u2265365 days).\n\n**Weights:** You can adjust the importance of these factors (0\u20135) to match your priorities. If a factor has no data (e.g., no city records for an address), it is excluded from the average rather than guessed.",
+   "tool_trace": [
+    {
+     "tool": "explain_factors",
+     "args": {},
+     "result": "ok"
+    }
+   ],
+   "fallback_reason": null,
+   "seconds": 1.89
+  }
+ ]
+}
