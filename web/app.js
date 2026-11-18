@@ -291,7 +291,7 @@ function chip(label, data, cls = "", title = "", removable = true) {
 
 function renderUnderstood() {
   const r = state.plan;
-  if (!r) return;
+  if (!r || !$("chips")) return;  // no answer on screen (thinking, refusal or error): nothing to redraw
   const f = r.filters || {};
   const areaName = Object.fromEntries((state.meta.areas || []).map((a) => [a.zip, a.area]));
   const tags = [];
@@ -341,6 +341,7 @@ async function ask(ev) {
   const box = $("understood");
   box.classList.remove("hidden");
   box.innerHTML = '<span class="lbl">Thinking…</span>';
+  state.plan = null;  // the previous answer's chips are gone; don't redraw them mid-question
   try {
     const r = await api("/api/agent", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: q, campus: state.campus, owner_occ: state.ownerOcc }) });
