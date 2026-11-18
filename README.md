@@ -13,7 +13,7 @@ You describe what you need in plain language, for example *"budget 2500, class a
 
 MIT 1.125 term project · Yilin Jiang (solo) · Midpoint check-in (Deliverable 2), Nov 19 2026.
 
-> **Status:** midpoint build. Midpoint slides: <https://claude.ai/artifact/2HWv3wbV2vvjb1iWXt6VhC> (private until shared). Proposal: `docs/proposal.pdf` (Deliverable 1, PSet6). What changed since the proposal and what's left: [`docs/midpoint.md`](docs/midpoint.md).
+> **Status:** midpoint build. Deliverable 2 video (~4 min): <https://youtu.be/-PX3yZA1AP0>. Proposal: `docs/proposal.pdf` (Deliverable 1, PSet6). What changed since the proposal and what's left: [`docs/midpoint.md`](docs/midpoint.md).
 
 ---
 
@@ -39,7 +39,7 @@ make run                         # http://127.0.0.1:8000
 Tests and evaluation:
 
 ```bash
-make test           # 44 unit/integration tests on the fixtures, no network
+make test           # 59 unit/integration tests on the fixtures, no network
 make eval           # 20 fixed agent queries -> eval/results/agent_<mode>_<date>.json
 ```
 
@@ -78,7 +78,7 @@ Without a key, or if a Gemini call fails (rate limit, no network), the agent swi
 | Transit | MBTA GTFS | Nearest subway or Green Line station and its lines; bus stops within 400 m |
 | Traffic noise | Road traffic volume (AADT) on nearby crash records | Busiest road within 100 m |
 
-**Scope: Boston has the evidence.** Owner and RentSmart data cover Boston only (Allston, Brighton, Fenway). Cambridge listings are shown too, because MIT and Harvard Yard students live there, but hollow on the map and labeled "listing only"; they can be switched off. The agent includes Cambridge for MIT / Harvard Yard commutes and sticks to Boston for SEAS unless asked. Factors without data are **left out of the score and labeled "n/a"**. They are never guessed, and the card shows what share of the weights the score is based on.
+**Scope: Boston has the evidence.** Owner and RentSmart data cover Boston only (Allston, Brighton, Fenway). Cambridge listings are shown too, because MIT and Harvard Yard students live there, labeled "LISTING ONLY" on their cards; they can be switched off under Adjust. The agent includes Cambridge for MIT / Harvard Yard commutes and sticks to Boston for SEAS unless asked. For Cambridge listings, factors without data are **left out of the score and labeled "n/a"**; the card shows what share of the weights the score is based on.
 
 **No records is not reassurance.** A Boston address with no complaints or violations gets a neutral note ("no city records since …, not proof of no problems") and a building score of at most 90. An address that cannot be matched to city data at all is scored at the **average of that factor over listings in the same area** (shown as "unknown"; city-wide average when an area has fewer than 20 scored listings), so missing evidence is never a bonus or a penalty; the same holds when no owner of record is found. Every count is shown with its window and radius (for example "within 150 m, 2021-2025"). Crash counts describe traffic on the street, not anyone's personal safety.
 
@@ -101,7 +101,7 @@ The score is a weighted average of 0–100 factor scores. Weights run from 0 to 
 | Bike commute | 3 | 100 at ≤10 min, 0 at ≥45 min |
 | Building record | 3 | Per signal type: severity × (1 + ln count), so repeats add less. Trash tickets weigh 0.3; heat, pests, mold and safety weigh 2.5–3. Score = 100·exp(−total / 6), using the last 3 years. |
 | Owner record | 2 | Starts at 70. +20 if the owner lives in the building (switchable to 0 or −20 under Adjust), −5 per serious record across the owner's properties (max −60), −10 if mailing address is outside MA. |
-| Street safety | 2 | Rank of (injury + 2 × pedestrian/bike crashes within 150 m + after-dark bike crashes along the route) |
+| Crash history | 2 | Rank of (injury + 2 × pedestrian/bike crashes within 150 m + after-dark bike crashes along the route) |
 | Traffic noise | 1 | Rank of the busiest nearby road's AADT. No traffic count within 100 m counts as no data. |
 | T access | 1 | 100 at ≤5 min walk, 0 at ≥20 min |
 | Freshness | 1 | 100 at ≤14 days on market, 0 at ≥365 days |
@@ -155,8 +155,8 @@ docs/           architecture, data sources, midpoint report, proposal
 
 ## Testing and evaluation
 
-- `make test` runs **44 tests** on the synthetic fixtures. They cover address parsing and ranges, spatial index, ingest scope and zip correction, schema errors, building/owner/street/transit features, scoring (missing factors excluded, weights change the ranking, budget curve), planner, grounding, guardrail, tools, the offline agent, the LLM tool loop with a scripted model (including the grounding retry and the fallback on a 429), and the HTTP API.
-- `make eval` runs **20 fixed queries** and checks hard constraints (budget and bedrooms), made-up numbers, guardrail refusals and the safety note. The proposal target is 0 made-up numbers across the 20 tests. The latest results are in `eval/results/`.
+- `make test` runs **59 tests** on the synthetic fixtures. They cover address parsing and ranges, spatial index, ingest scope and zip correction, schema errors, building/owner/street/transit features, scoring (missing factors excluded, weights change the ranking, budget curve), planner, grounding, guardrail, tools, the offline agent, the LLM tool loop with a scripted model (including the grounding retry and the fallback on a 429), and the HTTP API.
+- `make eval` runs **20 fixed queries** and checks hard constraints (budget and bedrooms), made-up numbers, guardrail refusals and the safety note. The proposal target is 0 made-up numbers across the 20 tests. Latest LLM run (Nov 9): 20/20 passed, 0 made-up numbers (`eval/results/agent_llm_2026-11-09.json`).
 - `eval/signal_agreement.py sample|score` hand-labels 200 RentSmart descriptions and measures agreement for the rules and the LLM. The proposal target is ≥85%.
 
 ## Limitations (honest list)
