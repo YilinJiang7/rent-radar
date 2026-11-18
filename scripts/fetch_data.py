@@ -83,7 +83,7 @@ def fetch_rentsmart() -> None:
         print("  error:", e)
         try:
             ckan_resources("rentsmart")
-            print("  resource list saved to data/raw/rentsmart/_resources.json -- send it to Claude")
+            print("  resource list saved to data/raw/rentsmart/_resources.json -- pick the record-level CSV from it and download it by hand")
         except Exception:  # noqa: BLE001
             pass
         manual("rentsmart", dest, "the record-level 'RENTSMART 2016 - PRESENT' CSV")

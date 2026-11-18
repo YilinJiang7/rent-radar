@@ -11,9 +11,15 @@ You describe what you need in plain language, for example *"budget 2500, class a
 - distance to the nearest T station
 - traffic noise
 
-MIT 1.125 term project · Yilin Jiang (solo) · Midpoint check-in (Deliverable 2), Nov 19 2026.
+MIT 1.125 term project · Yilin Jiang (solo) · Fall 2026
 
-> **Status:** midpoint build. Deliverable 2 video (~4 min): <https://youtu.be/-PX3yZA1AP0>. Proposal: `docs/proposal.pdf` (Deliverable 1, PSet6). What changed since the proposal and what's left: [`docs/midpoint.md`](docs/midpoint.md).
+## Deliverables
+
+| # | Deliverable | Date | Materials |
+|---|---|---|---|
+| 1 | Proposal | Oct 29 | [`docs/proposal.pdf`](docs/proposal.pdf) (submitted as PSet6: [onexi/ps06#20](https://github.com/onexi/ps06/pull/20)) and in-class presentation |
+| 2 | Midpoint check-in | Nov 19 | Video (~4 min): <https://youtu.be/-PX3yZA1AP0> · Progress report: [`docs/midpoint.md`](docs/midpoint.md) (changes since the proposal, risks tested, real-data numbers, plan) |
+| 3 | Final | Dec 3 | In progress: final video and polished repo |
 
 ---
 
@@ -134,7 +140,7 @@ Key design choices. More detail is in [`docs/architecture.md`](docs/architecture
 
 - **Precompute evidence, score at request time.** Matching listings to records and counting crashes is slow, so it runs once at build time. Weights change per user, so scoring runs live and is cheap.
 - **Tools are the only data path.** The UI, the offline agent and the LLM agent all call the same functions. That is what makes the grounding check meaningful.
-- **Address matching** (`address.py`). Addresses are normalized to `STREET|ZIP` plus a house-number range, so `40-42 Sample Ave` matches `41 Sample Avenue`. When the address doesn't match, the fallback is the nearest record within 20 m, labeled `geo`. The match type is shown on every record.
+- **Address matching** (`address.py`). Addresses are normalized to `STREET|ZIP` plus a house-number range, so `40-42 Sample Ave` matches `41 Sample Avenue`. Records that don't match by address are linked through the assessment parcel ID (`parcel`). A location match within 20 m (`geo`) is used only for records whose own address can't be parsed, so a neighbour's records are never blamed on a building. The match type is shown on every record. On the real build, 1,829 of 2,130 Boston listings (86%) match city data.
 - **The Gemini REST API is called directly** with `httpx` instead of an SDK, so the request and response shapes are visible in one file (`agent/llm.py`). A `ScriptedModel` replays model turns in tests, so the tool loop is tested without network access.
 - **Readers fail loudly on schema drift.** Each reader lists column aliases. If a required column is missing, it raises an error that names the columns it found. The build skips that layer and reports it; it doesn't silently zero it out.
 
@@ -155,13 +161,13 @@ docs/           architecture, data sources, midpoint report, proposal
 
 ## Testing and evaluation
 
-- `make test` runs **59 tests** on the synthetic fixtures. They cover address parsing and ranges, spatial index, ingest scope and zip correction, schema errors, building/owner/street/transit features, scoring (missing factors excluded, weights change the ranking, budget curve), planner, grounding, guardrail, tools, the offline agent, the LLM tool loop with a scripted model (including the grounding retry and the fallback on a 429), and the HTTP API.
+- `make test` runs **59 tests** on the synthetic fixtures. They cover address parsing and ranges, spatial index, ingest scope and zip correction, schema errors, building/owner/street/transit features, scoring (missing data scored at the area average, Cambridge factors excluded, weights change the ranking, budget curve), planner, grounding, guardrail, tools, the offline agent, the LLM tool loop with a scripted model (including the grounding retry and the fallback on a 429), and the HTTP API.
 - `make eval` runs **20 fixed queries** and checks hard constraints (budget and bedrooms), made-up numbers, guardrail refusals and the safety note. The proposal target is 0 made-up numbers across the 20 tests. Latest LLM run (Nov 9): 20/20 passed, 0 made-up numbers (`eval/results/agent_llm_2026-11-09.json`).
 - `eval/signal_agreement.py sample|score` hand-labels 200 RentSmart descriptions and measures agreement for the rules and the LLM. The proposal target is ≥85%.
 
-## Limitations (honest list)
+## Limitations
 
-- **Listings go stale.** RentCast keeps a listing "Active" while any source still shows it. In the 2026-10-27 pull, 462 of 1,000 rows were listed more than 180 days earlier, and every Allston, Brighton and Fenway row was older than 180 days. Hence the freshness tiers above, a fresh per-zip pull, and the comparison between consecutive pulls ("gone since the last pull").
+- **Listings go stale.** RentCast keeps a listing "Active" while any source still shows it. In the 2026-10-27 city-level pull, 462 of 1,000 rows were listed more than 180 days earlier, and every Allston, Brighton and Fenway row was older than 180 days. The Nov 4 pull, one request per zip code, retrieved 4,218 listings and kept 3,011 after the freshness rules (Boston median: 37 days on market). Hence the freshness tiers above and, once two pulls exist, the comparison between them ("gone since the last pull").
 - Commute times are straight-line estimates, not routed. MBTA trip planning is planned for the final.
 - RentSmart and owner layers cover Boston only. The Cambridge equivalents are planned.
 - The owner of record can differ from the person advertising the listing. The app shows both and tells the student to verify before paying anything. It does not detect fraud.
@@ -170,7 +176,7 @@ docs/           architecture, data sources, midpoint report, proposal
 ## Data and licenses
 
 - RentCast listing data is used under the RentCast API terms. Raw pulls are git-ignored because they include agent contact details. Analyze Boston datasets are public (ODC-BY / PDDL; see each dataset page). MassDOT crash data is public. MBTA GTFS is public.
-- Map tiles: © OpenStreetMap contributors, © CARTO. Leaflet 1.9.4: BSD-2-Clause (`web/vendor/leaflet/LICENSE`).
+- Map tiles: © OpenStreetMap contributors. Leaflet 1.9.4: BSD-2-Clause (`web/vendor/leaflet/LICENSE`).
 - Sources with URLs are listed in [`docs/data-sources.md`](docs/data-sources.md).
 
 ## External resources and AI assistance

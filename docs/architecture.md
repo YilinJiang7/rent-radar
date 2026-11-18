@@ -53,7 +53,7 @@ flowchart LR
 - Unit designators are removed (`Apt`, `Unit`, `#`, `Fl`, …).
 - Zips are left-padded (`2134` → `02134`). For RentSmart-style addresses, the zip is read from the end of the address string (`"256 Parker Hill Ave, 02120"`).
 
-Match types are `address` (same range), `address_range` (overlapping) and `geo` (no address match; a record with coordinates within 20 m). The type is stored per link and shown in the UI.
+Match types are `address` (same range), `address_range` (overlapping), `parcel` (linked through the assessment parcel ID) and `geo` (only for records whose own address can't be parsed: coordinates within 20 m). A suffix `_nearby_zip` marks the same street name matched in a neighbouring Boston zip. The type is stored per link and shown in the UI.
 
 ## Why these technologies
 
